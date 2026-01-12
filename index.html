@@ -1,0 +1,2719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frost Domain</title>
+    <style>
+        :root {
+            --main-color: #00ffff;
+            --glow-intensity: 1;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            color: white;
+        }
+        
+        .wallpaper-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        .wallpaper {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: none;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+        
+        .wallpaper.active {
+            display: block;
+            opacity: 1;
+        }
+        
+        .instructions {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 100;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            font-size: 14px;
+            color: var(--main-color);
+            text-shadow: 0 0 calc(5px * var(--glow-intensity)) var(--main-color);
+        }
+        
+        .instructions.fade-out {
+            opacity: 0;
+            transition: opacity 2s ease-in-out 3s;
+        }
+
+        .invisible-arrow {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--main-color);
+            font-size: 40px;
+            width: 60px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 2000;
+            opacity: 1;
+            pointer-events: auto;
+            text-shadow: 0 0 calc(10px * var(--glow-intensity)) var(--main-color);
+            transition: opacity 0.3s ease;
+        }
+
+        .invisible-arrow.mobile-arrow {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .invisible-arrow.desktop-arrow {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .invisible-arrow.desktop-arrow.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .invisible-arrow.left {
+            left: 20px;
+        }
+
+        .invisible-arrow.right {
+            right: 20px;
+        }
+
+        #profile-hover {
+            position: fixed;
+            top: 20px;
+            right: -250px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--main-color);
+            border-radius: 8px;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 3000;
+            transition: right 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        #profile-hover.visible {
+            right: 20px;
+        }
+
+        #profile-hover-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #003333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            border: 1px solid var(--main-color);
+        }
+
+        #profile-hover-name {
+            color: var(--main-color);
+            font-size: 0.9rem;
+        }
+
+        #control-panel {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 300px;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            border-right: 1px solid var(--main-color);
+            z-index: 4000;
+            transition: left 0.3s ease;
+            padding: 20px;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+        }
+
+        #control-panel.visible {
+            left: 0;
+        }
+
+        #control-panel h2 {
+            color: var(--main-color);
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 0 0 calc(5px * var(--glow-intensity)) var(--main-color);
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        .control-group h3 {
+            color: var(--main-color);
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            border-bottom: 1px solid var(--main-color);
+            padding-bottom: 5px;
+        }
+
+        .control-button {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: var(--main-color);
+            border: 1px solid var(--main-color);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Courier New', monospace;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-button:hover {
+            background: var(--main-color);
+            color: black;
+            transform: translateX(5px);
+        }
+
+        .control-button i {
+            font-style: normal;
+            width: 24px;
+            text-align: center;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            z-index: 3001;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.visible {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background-color: black;
+            border: 2px solid var(--main-color);
+            border-radius: 8px;
+            padding: 20px;
+            width: 400px;
+            max-width: 90%;
+            box-shadow: 0 0 calc(20px * var(--glow-intensity)) var(--main-color);
+            color: var(--main-color);
+            position: relative;
+            transform: scale(0.95);
+            transition: transform 0.2s ease;
+        }
+
+        .modal.visible .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-content h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 calc(10px * var(--glow-intensity)) var(--main-color);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: var(--main-color);
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 1;
+        }
+
+        #save-load-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--main-color);
+        }
+
+        .save-load-tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .save-load-tab.active {
+            background-color: var(--main-color);
+            color: black;
+        }
+
+        #save-section, #load-section {
+            display: none;
+        }
+
+        #save-section.active, #load-section.active {
+            display: block;
+        }
+
+        #code-word-input, #load-code-input {
+            width: 100%;
+            padding: 10px;
+            background-color: black;
+            color: var(--main-color);
+            border: 1px solid var(--main-color);
+            margin-bottom: 15px;
+            font-family: 'Courier New', monospace;
+            outline: none;
+        }
+
+        #save-button, #load-button, #email-export {
+            width: 100%;
+            padding: 10px;
+            background-color: black;
+            color: var(--main-color);
+            border: 1px solid var(--main-color);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 10px;
+        }
+
+        #save-button:hover, #load-button:hover, #email-export:hover {
+            background-color: var(--main-color);
+            color: black;
+        }
+
+        #save-status, #load-status {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 0.9rem;
+            min-height: 20px;
+        }
+
+        #export-import-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--main-color);
+        }
+
+        .export-import-tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .export-import-tab.active {
+            background-color: var(--main-color);
+            color: black;
+        }
+
+        #export-section, #import-section {
+            display: none;
+        }
+
+        #export-section.active, #import-section.active {
+            display: block;
+        }
+
+        #export-code {
+            width: 100%;
+            padding: 10px;
+            background-color: black;
+            color: var(--main-color);
+            border: 1px solid var(--main-color);
+            margin-bottom: 15px;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+            min-height: 80px;
+            outline: none;
+        }
+
+        #import-code {
+            width: 100%;
+            padding: 10px;
+            background-color: black;
+            color: var(--main-color);
+            border: 1px solid var(--main-color);
+            margin-bottom: 15px;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+            min-height: 80px;
+            outline: none;
+        }
+
+        #copy-export, #import-button {
+            width: 100%;
+            padding: 10px;
+            background-color: black;
+            color: var(--main-color);
+            border: 1px solid var(--main-color);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Courier New', monospace;
+        }
+
+        #copy-export:hover, #import-button:hover {
+            background-color: var(--main-color);
+            color: black;
+        }
+
+        #export-status, #import-status {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 0.9rem;
+            min-height: 20px;
+        }
+
+        .theme-control {
+            margin: 15px 0;
+        }
+
+        .theme-control label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        #color-picker {
+            width: 100%;
+            height: 50px;
+            border: 2px solid var(--main-color);
+            border-radius: 5px;
+            background: black;
+            cursor: pointer;
+        }
+
+        #glow-slider {
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        #glow-value {
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        #apply-theme {
+            width: 100%;
+            padding: 10px;
+            background-color: black;
+            color: var(--main-color);
+            border: 1px solid var(--main-color);
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        #apply-theme:hover {
+            background-color: var(--main-color);
+            color: black;
+        }
+
+        .profile-control {
+            margin: 15px 0;
+        }
+
+        .profile-control label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .profile-control input {
+            width: 100%;
+            padding: 8px;
+            background-color: black;
+            color: var(--main-color);
+            border: 1px solid var(--main-color);
+            border-radius: 4px;
+        }
+
+        #profile-preview {
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        #profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 2px solid var(--main-color);
+            margin: 0 auto 10px;
+            background-color: #003333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        #save-profile {
+            width: 100%;
+            padding: 10px;
+            background-color: black;
+            color: var(--main-color);
+            border: 1px solid var(--main-color);
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        #save-profile:hover {
+            background-color: var(--main-color);
+            color: black;
+        }
+
+        #notes-content {
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #notes-text {
+            flex: 1;
+            background-color: black;
+            color: var(--main-color);
+            border: 1px solid var(--main-color);
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            resize: none;
+            outline: none;
+            margin-bottom: 10px;
+        }
+
+        #save-notes {
+            padding: 10px;
+            background-color: black;
+            color: var(--main-color);
+            border: 1px solid var(--main-color);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        #save-notes:hover {
+            background-color: var(--main-color);
+            color: black;
+        }
+
+        #info-modal-content {
+            width: 500px;
+            max-width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding-right: 15px;
+        }
+
+        #info-modal-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #info-modal-content::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        #info-modal-content::-webkit-scrollbar-thumb {
+            background: var(--main-color);
+            border-radius: 4px;
+        }
+
+        #info-modal-content::-webkit-scrollbar-thumb:hover {
+            background: #00cccc;
+        }
+
+        #timer-wallpaper {
+            background-color: black;
+            color: var(--main-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
+        }
+
+        #timer-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: black;
+            border: 2px solid var(--main-color);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 calc(15px * var(--glow-intensity)) var(--main-color);
+            z-index: 100;
+            text-align: center;
+        }
+
+        .time-inputs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 15px 0;
+        }
+
+        .time-input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .time-input {
+            background-color: black;
+            color: var(--main-color);
+            border: 1px solid var(--main-color) !important;
+            padding: 8px;
+            width: 50px;
+            text-align: center;
+            -moz-appearance: textfield;
+            outline: none;
+        }
+
+        .time-input::-webkit-outer-spin-button,
+        .time-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        #start-timer {
+            background-color: black;
+            color: var(--main-color);
+            border: 1px solid var(--main-color);
+            padding: 8px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        #start-timer:hover {
+            background-color: var(--main-color);
+            color: black;
+        }
+
+        #active-timer {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            color: var(--main-color);
+            text-shadow: 0 0 calc(10px * var(--glow-intensity)) var(--main-color);
+            z-index: 100;
+        }
+
+        .binary-stream {
+            position: absolute;
+            color: var(--main-color);
+            font-size: 1.5rem;
+            pointer-events: none;
+            opacity: 0.7;
+            animation: flow-out linear forwards;
+        }
+
+        @keyframes flow-out {
+            0% { 
+                transform: translate(0, 0) scale(1);
+                opacity: 0.8;
+            }
+            100% { 
+                transform: translate(
+                    calc(var(--tx) * 200px),
+                    calc(var(--ty) * 200px)
+                ) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        #control-buttons {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 101;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+
+        #control-buttons:hover {
+            opacity: 1;
+        }
+
+        .control-btn {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: var(--main-color);
+            border: 1px solid var(--main-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s;
+        }
+
+        .control-btn:hover {
+            background-color: var(--main-color);
+            color: black;
+            transform: scale(1.1);
+        }
+
+        #todo-wallpaper {
+            background-color: black;
+            color: var(--main-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
+        }
+
+        #todo-wallpaper h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            z-index: 1;
+        }
+
+        #todo-wallpaper #add-task {
+            padding: 15px;
+            background-color: black;
+            color: var(--main-color);
+            cursor: pointer;
+            font-size: 24px;
+            transition: background-color 0.3s, color 0.3s;
+            margin-bottom: 20px;
+            border-radius: 50%;
+            border: 2px solid var(--main-color);
+            box-shadow: 0 0 calc(10px * var(--glow-intensity)) var(--main-color);
+            z-index: 1;
+        }
+
+        #todo-wallpaper #add-task:hover {
+            background-color: var(--main-color);
+            color: black;
+        }
+
+        #todo-wallpaper #task-list {
+            list-style-type: none;
+            padding: 0;
+            width: 300px;
+            z-index: 1;
+            transition: opacity 1s ease;
+        }
+
+        #todo-wallpaper .task {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            color: var(--main-color);
+        }
+
+        #todo-wallpaper .check-box {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--main-color);
+            border-radius: 4px;
+            margin-right: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #todo-wallpaper .checked {
+            background-color: var(--main-color);
+        }
+
+        #todo-wallpaper .task-text {
+            flex-grow: 1;
+            transition: text-decoration 0.3s ease, opacity 0.3s ease;
+        }
+
+        #todo-wallpaper .checked-text {
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+
+        #todo-wallpaper #modal {
+            display: none;
+            position: fixed;
+            z-index: 2;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.8);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        #todo-wallpaper #modal.visible {
+            display: block;
+            opacity: 1;
+        }
+
+        #todo-wallpaper #modal-content {
+            background-color: black;
+            margin: 25% auto;
+            padding: 20px;
+            width: 300px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+        }
+
+        #todo-wallpaper #new-task-input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            background-color: black;
+            color: var(--main-color);
+            font-size: 20px;
+            font-family: 'Courier New', Courier, monospace;
+            transition: box-shadow 0.3s;
+            border-radius: 4px;
+        }
+
+        #todo-wallpaper #new-task-input::placeholder {
+            color: #006b6b;
+            opacity: 1;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        #todo-wallpaper #new-task-input:focus {
+            outline: none;
+        }
+
+        #todo-wallpaper .celebration {
+            position: relative;
+            font-size: 3em;  
+            animation: pop 0.5s ease-in-out forwards;
+        }
+
+        @keyframes pop {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+
+        #todo-wallpaper .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: var(--main-color);
+            animation: confetti-fall 1.5s ease-in forwards;
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        #image-wallpaper {
+            background-color: #000;
+            color: var(--main-color);
+            font-family: 'Courier New', monospace;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #image-wallpaper .container {
+            text-align: center;
+            z-index: 10;
+            padding: 30px;
+            border: 2px solid var(--main-color);
+            border-radius: 8px;
+            background-color: rgba(0, 0, 0, 0.8);
+            box-shadow: 0 0 calc(20px * var(--glow-intensity)) var(--main-color);
+            max-width: 90%;
+        }
+
+        #image-wallpaper h1 {
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+            text-shadow: 0 0 calc(10px * var(--glow-intensity)) var(--main-color);
+        }
+
+        #image-wallpaper .upload-btn {
+            background-color: #000;
+            color: var(--main-color);
+            border: 2px solid var(--main-color);
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 30px 0 20px 0;
+            font-family: 'Courier New', monospace;
+            box-shadow: 0 0 calc(10px * var(--glow-intensity)) var(--main-color);
+        }
+
+        #image-wallpaper .upload-btn:hover {
+            background-color: var(--main-color);
+            color: #000;
+            transform: scale(1.05);
+        }
+
+        #image-wallpaper #fileInput {
+            display: none;
+        }
+
+        #image-wallpaper #imageDisplay {
+            display: none;
+        }
+
+        #image-wallpaper .fullscreen-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: black;
+            z-index: 1500;
+            display: none;
+        }
+
+        #image-wallpaper .fullscreen-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        #image-wallpaper .file-info {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .mobile-menu-button {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--main-color);
+            border-radius: 4px;
+            color: var(--main-color);
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 5000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .mobile-menu-button.active {
+            background: var(--main-color);
+            color: black;
+        }
+
+        .mobile-controls-container {
+            display: none;
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            width: 250px;
+            background: rgba(0, 0, 0, 0.95);
+            border: 1px solid var(--main-color);
+            border-radius: 8px;
+            padding: 15px;
+            z-index: 4999;
+            backdrop-filter: blur(10px);
+            max-height: calc(100vh - 90px);
+            overflow-y: auto;
+        }
+
+        .mobile-controls-container.visible {
+            display: block;
+        }
+
+        .mobile-control-group {
+            margin-bottom: 20px;
+        }
+
+        .mobile-control-group h3 {
+            color: var(--main-color);
+            margin-bottom: 10px;
+            font-size: 1rem;
+            border-bottom: 1px solid var(--main-color);
+            padding-bottom: 5px;
+        }
+
+        .mobile-control-button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: var(--main-color);
+            border: 1px solid var(--main-color);
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .instructions {
+                font-size: 12px;
+                padding: 8px;
+            }
+            
+            .invisible-arrow.mobile-arrow {
+                opacity: 0.8;
+                font-size: 30px;
+                width: 50px;
+                height: 80px;
+            }
+            
+            .invisible-arrow.left {
+                left: 10px;
+            }
+            
+            .invisible-arrow.right {
+                right: 10px;
+            }
+            
+            #control-panel {
+                display: none;
+            }
+            
+            .mobile-menu-button {
+                display: flex;
+            }
+            
+            .modal-content {
+                width: 95%;
+                padding: 15px;
+            }
+            
+            #info-modal-content {
+                width: 95%;
+            }
+            
+            #timer-wallpaper #timer-popup {
+                width: 90%;
+                padding: 15px;
+            }
+            
+            .time-inputs {
+                gap: 5px;
+            }
+            
+            .time-input {
+                width: 40px;
+                padding: 5px;
+            }
+            
+            #todo-wallpaper #task-list {
+                width: 90%;
+            }
+            
+            #image-wallpaper .container {
+                padding: 20px;
+            }
+            
+            #image-wallpaper h1 {
+                font-size: 1.8rem;
+                margin-bottom: 20px;
+            }
+            
+            #image-wallpaper .upload-btn {
+                padding: 12px 20px;
+                font-size: 1rem;
+            }
+            
+            #active-timer {
+                font-size: 3rem;
+            }
+            
+            #control-buttons {
+                bottom: 20px;
+                gap: 10px;
+            }
+            
+            .control-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 16px;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-menu-button,
+            .mobile-controls-container {
+                display: none !important;
+            }
+            
+            .invisible-arrow.mobile-arrow {
+                display: none;
+            }
+            
+            #control-panel {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="instructions" id="instructions">
+        Hover top-left corner for controls | Hover top-right corner for profile
+    </div>
+
+    <div id="control-panel">
+        <h2>Frost Domain Controls</h2>
+        
+        <div class="control-group">
+            <h3>Navigation</h3>
+            <button class="control-button" id="prev-wallpaper-btn">
+                <i>◀</i> Previous Wallpaper
+            </button>
+            <button class="control-button" id="next-wallpaper-btn">
+                <i>▶</i> Next Wallpaper
+            </button>
+        </div>
+        
+        <div class="control-group">
+            <h3>System</h3>
+            <button class="control-button" id="save-load-btn">
+                <i>💾</i> Save & Load
+            </button>
+            <button class="control-button" id="theme-btn">
+                <i>🎨</i> Theme Customizer
+            </button>
+            <button class="control-button" id="profile-btn">
+                <i>👤</i> Profile Settings
+            </button>
+            <button class="control-button" id="notes-btn">
+                <i>📝</i> Notes
+            </button>
+            <button class="control-button" id="info-btn">
+                <i>ℹ️</i> Information
+            </button>
+        </div>
+        
+        <div class="control-group">
+            <h3>Timer Controls</h3>
+            <button class="control-button" id="timer-start-btn">
+                <i>⏱️</i> Start Timer
+            </button>
+            <button class="control-button" id="timer-pause-btn">
+                <i>⏸️</i> Pause/Resume Timer
+            </button>
+            <button class="control-button" id="timer-add-btn">
+                <i>➕</i> Add 5 Minutes
+            </button>
+            <button class="control-button" id="timer-reset-btn">
+                <i>🔄</i> Reset Timer
+            </button>
+        </div>
+        
+        <div class="control-group">
+            <h3>To-Do List</h3>
+            <button class="control-button" id="todo-add-btn">
+                <i>➕</i> Add Task
+            </button>
+            <button class="control-button" id="todo-clear-btn">
+                <i>🗑️</i> Clear Completed
+            </button>
+        </div>
+    </div>
+
+    <div class="invisible-arrow left desktop-arrow" id="prev-wallpaper">◀</div>
+    <div class="invisible-arrow right desktop-arrow" id="next-wallpaper">▶</div>
+    
+    <div class="invisible-arrow left mobile-arrow" id="prev-wallpaper-mobile">◀</div>
+    <div class="invisible-arrow right mobile-arrow" id="next-wallpaper-mobile">▶</div>
+    
+    <div class="mobile-menu-button" id="mobile-menu-button">☰</div>
+    
+    <div class="mobile-controls-container" id="mobile-controls-container">
+        <div class="mobile-control-group">
+            <h3>Navigation</h3>
+            <button class="mobile-control-button" id="prev-wallpaper-btn-mobile">
+                <i>◀</i> Previous Wallpaper
+            </button>
+            <button class="mobile-control-button" id="next-wallpaper-btn-mobile">
+                <i>▶</i> Next Wallpaper
+            </button>
+        </div>
+        
+        <div class="mobile-control-group">
+            <h3>System</h3>
+            <button class="mobile-control-button" id="save-load-btn-mobile">
+                <i>💾</i> Save & Load
+            </button>
+            <button class="mobile-control-button" id="theme-btn-mobile">
+                <i>🎨</i> Theme Customizer
+            </button>
+            <button class="mobile-control-button" id="profile-btn-mobile">
+                <i>👤</i> Profile Settings
+            </button>
+            <button class="mobile-control-button" id="notes-btn-mobile">
+                <i>📝</i> Notes
+            </button>
+            <button class="mobile-control-button" id="info-btn-mobile">
+                <i>ℹ️</i> Information
+            </button>
+        </div>
+        
+        <div class="mobile-control-group">
+            <h3>Timer Controls</h3>
+            <button class="mobile-control-button" id="timer-start-btn-mobile">
+                <i>⏱️</i> Start Timer
+            </button>
+            <button class="mobile-control-button" id="timer-pause-btn-mobile">
+                <i>⏸️</i> Pause/Resume Timer
+            </button>
+            <button class="mobile-control-button" id="timer-add-btn-mobile">
+                <i>➕</i> Add 5 Minutes
+            </button>
+            <button class="mobile-control-button" id="timer-reset-btn-mobile">
+                <i>🔄</i> Reset Timer
+            </button>
+        </div>
+        
+        <div class="mobile-control-group">
+            <h3>To-Do List</h3>
+            <button class="mobile-control-button" id="todo-add-btn-mobile">
+                <i>➕</i> Add Task
+            </button>
+            <button class="mobile-control-button" id="todo-clear-btn-mobile">
+                <i>🗑️</i> Clear Completed
+            </button>
+        </div>
+    </div>
+    
+    <div id="profile-hover">
+        <div id="profile-hover-avatar">👤</div>
+        <div id="profile-hover-name">User</div>
+    </div>
+
+    <div id="save-load-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" id="close-save-load">×</button>
+            <h2>Save & Load</h2>
+            
+            <div id="save-load-tabs">
+                <div class="save-load-tab active" data-tab="save">Save</div>
+                <div class="save-load-tab" data-tab="load">Load</div>
+                <div class="save-load-tab" data-tab="export-import">Export/Import</div>
+            </div>
+            
+            <div id="save-section" class="active">
+                <p>Create a code word to save your current progress:</p>
+                <input type="text" id="code-word-input" placeholder="Enter code word">
+                <button id="save-button">Save Progress</button>
+                <div id="save-status"></div>
+            </div>
+            
+            <div id="load-section">
+                <p>Enter your code word to load saved progress:</p>
+                <input type="text" id="load-code-input" placeholder="Enter code word">
+                <button id="load-button">Load Progress</button>
+                <div id="load-status"></div>
+            </div>
+
+            <!-- Fixed export/import section - added proper display handling -->
+            <div id="export-import-tabs" style="display: none;">
+                <div class="export-import-tab active" data-tab="export">Export</div>
+                <div class="export-import-tab" data-tab="import">Import</div>
+            </div>
+            
+            <div id="export-section" style="display: none;">
+                <p>Export your data to use on another device:</p>
+                <textarea id="export-code" readonly placeholder="Your export code will appear here"></textarea>
+                <button id="copy-export">Copy Export Code</button>
+                <button id="email-export">Email Export Code</button>
+                <div id="export-status"></div>
+            </div>
+            
+            <div id="import-section" style="display: none;">
+                <p>Paste your export code from another device:</p>
+                <textarea id="import-code" placeholder="Paste your export code here"></textarea>
+                <button id="import-button">Import Data</button>
+                <div id="import-status"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="theme-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" id="close-theme">×</button>
+            <h2>Theme Customizer</h2>
+            
+            <div class="theme-control">
+                <label>Select Color:</label>
+                <input type="color" id="color-picker" value="#00ffff">
+            </div>
+            
+            <div class="theme-control">
+                <label>Glow Intensity: <span id="glow-value">1.0</span></label>
+                <input type="range" id="glow-slider" min="0.1" max="2" step="0.1" value="1">
+            </div>
+            
+            <button id="apply-theme">Apply Theme</button>
+        </div>
+    </div>
+
+    <div id="profile-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" id="close-profile">×</button>
+            <h2>Profile Settings</h2>
+            
+            <div id="profile-preview">
+                <div id="profile-avatar">👤</div>
+                <div id="profile-name-display">User</div>
+            </div>
+            
+            <div class="profile-control">
+                <label>Name:</label>
+                <input type="text" id="profile-name" placeholder="Enter your name">
+            </div>
+            
+            <div class="profile-control">
+                <label>Email:</label>
+                <input type="email" id="profile-email" placeholder="Enter your email">
+            </div>
+            
+            <div class="profile-control">
+                <label>Profile Picture URL:</label>
+                <input type="text" id="profile-avatar-url" placeholder="Paste image URL">
+            </div>
+            
+            <button id="save-profile">Save Profile</button>
+        </div>
+    </div>
+
+    <div id="notes-modal" class="modal">
+        <div class="modal-content" id="notes-content">
+            <h2>Notes</h2>
+            <textarea id="notes-text" placeholder="Type your notes here..."></textarea>
+            <button id="save-notes">Save Notes</button>
+        </div>
+    </div>
+
+    <div id="info-modal" class="modal">
+        <div class="modal-content" id="info-modal-content">
+            <button class="close-modal" id="close-info-modal">×</button>
+            <h2>Hotkeys Information</h2>
+            <div style="text-align: left; line-height: 1.6;">
+                <p><strong>Navigation:</strong></p>
+                <ul>
+                    <li>← → Arrow Keys: Switch between wallpapers</li>
+                    <li>Mouse near edges: Show navigation arrows</li>
+                    <li>Hover top-left corner: Show control panel</li>
+                    <li>Hover top-right corner: Show profile</li>
+                </ul>
+                
+                <p><strong>Timer Wallpaper:</strong></p>
+                <ul>
+                    <li>Enter: Start timer with current inputs</li>
+                    <li>Shift + R: Reset timer</li>
+                    <li>+ Button: Add 5 minutes</li>
+                    <li>II Button: Pause/Resume timer</li>
+                    <li>↻ Button: Reset timer</li>
+                </ul>
+                
+                <p><strong>To-Do List:</strong></p>
+                <ul>
+                    <li>Enter: Add new task</li>
+                    <li>Click checkbox: Mark task complete</li>
+                    <li>C or Escape: Close modal</li>
+                </ul>
+                
+                <p><strong>System Controls:</strong></p>
+                <ul>
+                    <li>Hover top-left corner: Show control panel with all functions</li>
+                    <li>CTRL + ALT + S: Open Save/Load menu</li>
+                    <li>CTRL + SHIFT + C: Open Theme Customizer</li>
+                    <li>CTRL + ALT + P: Open Profile Settings</li>
+                    <li>ALT + N: Open Notes</li>
+                    <li>ALT + I: Open this information panel</li>
+                    <li>ESC: Exit fullscreen image viewer</li>
+                </ul>
+                
+                <p><strong>Save/Load System:</strong></p>
+                <ul>
+                    <li>Create code words to save progress</li>
+                    <li>Export/Import for cross-device sync</li>
+                    <li>Email export codes to your profile email</li>
+                    <li>Automatic updates when changes occur</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="wallpaper-container">
+        <div id="timer-wallpaper" class="wallpaper active">
+            <div id="timer-popup">
+                <h2>Study Timer</h2>
+                <div class="time-inputs">
+                    <div class="time-input-group">
+                        <label>Hours</label>
+                        <input type="number" class="time-input" id="hours" min="0" value="0">
+                    </div>
+                    <div class="time-input-group">
+                        <label>Minutes</label>
+                        <input type="number" class="time-input" id="minutes" min="0" value="25">
+                    </div>
+                    <div class="time-input-group">
+                        <label>Seconds</label>
+                        <input type="number" class="time-input" id="seconds" min="0" value="0">
+                    </div>
+                </div>
+                <button id="start-timer">Start</button>
+            </div>
+
+            <div id="active-timer"></div>
+
+            <div id="control-buttons" style="display: none;">
+                <button id="add-time" class="control-btn" title="Add 5 minutes">+</button>
+                <button id="pause-timer" class="control-btn" title="Pause/Resume">II</button>
+                <button id="reset-timer" class="control-btn" title="Reset timer">↻</button>
+            </div>
+        </div>
+
+        <div id="todo-wallpaper" class="wallpaper">
+            <h1>To-Do List</h1>
+
+            <button id="add-task">+</button>
+
+            <ul id="task-list"></ul>
+
+            <div id="modal">
+                <div id="modal-content">
+                    <input type="text" id="new-task-input" placeholder="Enter a new task" autofocus>
+                </div>
+            </div>
+
+            <div id="celebration-container" style="display: none;"></div>
+        </div>
+
+        <div id="image-wallpaper" class="wallpaper">
+            <div class="container">
+                <h1>FROST FULLSCREEN VIEWER</h1>
+                <p>Select an image to display it in true fullscreen</p>
+                
+                <label for="fileInput" class="upload-btn">SELECT IMAGE</label>
+                <input type="file" id="fileInput" accept="image/*">
+                
+                <div class="file-info" id="fileInfo"></div>
+            </div>
+
+            <div class="fullscreen-mode" id="fullscreenMode">
+                <img class="fullscreen-image" id="fullscreenImage" alt="Fullscreen image">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            const instructions = document.getElementById('instructions');
+            const controlPanel = document.getElementById('control-panel');
+            const prevWallpaperBtn = document.getElementById('prev-wallpaper-btn');
+            const nextWallpaperBtn = document.getElementById('next-wallpaper-btn');
+            const saveLoadBtn = document.getElementById('save-load-btn');
+            const themeBtn = document.getElementById('theme-btn');
+            const profileBtn = document.getElementById('profile-btn');
+            const notesBtn = document.getElementById('notes-btn');
+            const infoBtn = document.getElementById('info-btn');
+            const timerStartBtn = document.getElementById('timer-start-btn');
+            const timerPauseBtn = document.getElementById('timer-pause-btn');
+            const timerAddBtn = document.getElementById('timer-add-btn');
+            const timerResetBtn = document.getElementById('timer-reset-btn');
+            const todoAddBtn = document.getElementById('todo-add-btn');
+            const todoClearBtn = document.getElementById('todo-clear-btn');
+            
+            const prevWallpaperBtnMobile = document.getElementById('prev-wallpaper-btn-mobile');
+            const nextWallpaperBtnMobile = document.getElementById('next-wallpaper-btn-mobile');
+            const saveLoadBtnMobile = document.getElementById('save-load-btn-mobile');
+            const themeBtnMobile = document.getElementById('theme-btn-mobile');
+            const profileBtnMobile = document.getElementById('profile-btn-mobile');
+            const notesBtnMobile = document.getElementById('notes-btn-mobile');
+            const infoBtnMobile = document.getElementById('info-btn-mobile');
+            const timerStartBtnMobile = document.getElementById('timer-start-btn-mobile');
+            const timerPauseBtnMobile = document.getElementById('timer-pause-btn-mobile');
+            const timerAddBtnMobile = document.getElementById('timer-add-btn-mobile');
+            const timerResetBtnMobile = document.getElementById('timer-reset-btn-mobile');
+            const todoAddBtnMobile = document.getElementById('todo-add-btn-mobile');
+            const todoClearBtnMobile = document.getElementById('todo-clear-btn-mobile');
+            
+            const saveLoadModal = document.getElementById('save-load-modal');
+            const themeModal = document.getElementById('theme-modal');
+            const profileModal = document.getElementById('profile-modal');
+            const notesModal = document.getElementById('notes-modal');
+            const infoModal = document.getElementById('info-modal');
+            
+            const wallpapers = document.querySelectorAll('.wallpaper');
+            const prevWallpaperArrow = document.getElementById('prev-wallpaper');
+            const nextWallpaperArrow = document.getElementById('next-wallpaper');
+            const prevWallpaperArrowMobile = document.getElementById('prev-wallpaper-mobile');
+            const nextWallpaperArrowMobile = document.getElementById('next-wallpaper-mobile');
+            
+            const profileHover = document.getElementById('profile-hover');
+            const profileHoverName = document.getElementById('profile-hover-name');
+            const profileHoverAvatar = document.getElementById('profile-hover-avatar');
+            
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileControlsContainer = document.getElementById('mobile-controls-container');
+            
+            let currentWallpaperIndex = 0;
+            let isControlPanelVisible = false;
+            let isMobileMenuOpen = false;
+            
+            document.addEventListener('DOMContentLoaded', initializeApp);
+            
+            function initializeApp() {
+                if (isMobile) {
+                    document.body.classList.add('mobile');
+                    instructions.textContent = "Tap top-right menu for controls | Tap arrows to navigate";
+                    mobileMenuButton.style.display = 'flex';
+                    
+                    const desktopArrows = document.querySelectorAll('.desktop-arrow');
+                    desktopArrows.forEach(arrow => arrow.style.display = 'none');
+                    
+                    const mobileArrows = document.querySelectorAll('.mobile-arrow');
+                    mobileArrows.forEach(arrow => arrow.style.display = 'flex');
+                } else {
+                    document.body.classList.add('desktop');
+                    mobileMenuButton.style.display = 'none';
+                    mobileControlsContainer.style.display = 'none';
+                    
+                    const desktopArrows = document.querySelectorAll('.desktop-arrow');
+                    desktopArrows.forEach(arrow => arrow.style.display = 'flex');
+                    
+                    const mobileArrows = document.querySelectorAll('.mobile-arrow');
+                    mobileArrows.forEach(arrow => arrow.style.display = 'none');
+                }
+                
+                setupEventListeners();
+                showWallpaper(currentWallpaperIndex);
+                
+                setTimeout(() => {
+                    instructions.classList.add('fade-out');
+                }, 5000);
+                
+                loadProfile();
+                loadTodos();
+            }
+            
+            function setupEventListeners() {
+                document.addEventListener('mousemove', handleMouseMove);
+                
+                prevWallpaperBtn.addEventListener('click', () => changeWallpaper(-1));
+                nextWallpaperBtn.addEventListener('click', () => changeWallpaper(1));
+                prevWallpaperArrow.addEventListener('click', () => changeWallpaper(-1));
+                nextWallpaperArrow.addEventListener('click', () => changeWallpaper(1));
+                
+                prevWallpaperBtnMobile.addEventListener('click', () => changeWallpaper(-1));
+                nextWallpaperBtnMobile.addEventListener('click', () => changeWallpaper(1));
+                prevWallpaperArrowMobile.addEventListener('click', () => changeWallpaper(-1));
+                nextWallpaperArrowMobile.addEventListener('click', () => changeWallpaper(1));
+                
+                saveLoadBtn.addEventListener('click', () => toggleModal(saveLoadModal));
+                themeBtn.addEventListener('click', () => toggleModal(themeModal));
+                profileBtn.addEventListener('click', () => toggleModal(profileModal));
+                notesBtn.addEventListener('click', () => toggleModal(notesModal));
+                infoBtn.addEventListener('click', () => toggleModal(infoModal));
+                
+                saveLoadBtnMobile.addEventListener('click', () => {
+                    toggleModal(saveLoadModal);
+                    toggleMobileMenu();
+                });
+                themeBtnMobile.addEventListener('click', () => {
+                    toggleModal(themeModal);
+                    toggleMobileMenu();
+                });
+                profileBtnMobile.addEventListener('click', () => {
+                    toggleModal(profileModal);
+                    toggleMobileMenu();
+                });
+                notesBtnMobile.addEventListener('click', () => {
+                    toggleModal(notesModal);
+                    toggleMobileMenu();
+                });
+                infoBtnMobile.addEventListener('click', () => {
+                    toggleModal(infoModal);
+                    toggleMobileMenu();
+                });
+                
+                timerStartBtn.addEventListener('click', startTimer);
+                timerPauseBtn.addEventListener('click', togglePauseTimer);
+                timerAddBtn.addEventListener('click', addFiveMinutes);
+                timerResetBtn.addEventListener('click', resetTimer);
+                
+                timerStartBtnMobile.addEventListener('click', () => {
+                    startTimer();
+                    toggleMobileMenu();
+                });
+                timerPauseBtnMobile.addEventListener('click', () => {
+                    togglePauseTimer();
+                    toggleMobileMenu();
+                });
+                timerAddBtnMobile.addEventListener('click', () => {
+                    addFiveMinutes();
+                    toggleMobileMenu();
+                });
+                timerResetBtnMobile.addEventListener('click', () => {
+                    resetTimer();
+                    toggleMobileMenu();
+                });
+                
+                todoAddBtn.addEventListener('click', addTodo);
+                todoClearBtn.addEventListener('click', clearCompletedTodos);
+                
+                todoAddBtnMobile.addEventListener('click', () => {
+                    addTodo();
+                    toggleMobileMenu();
+                });
+                todoClearBtnMobile.addEventListener('click', () => {
+                    clearCompletedTodos();
+                    toggleMobileMenu();
+                });
+                
+                document.querySelectorAll('.close-modal').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const modal = btn.closest('.modal');
+                        closeModal(modal);
+                    });
+                });
+                
+                mobileMenuButton.addEventListener('click', toggleMobileMenu);
+                
+                document.addEventListener('click', (e) => {
+                    if (isMobileMenuOpen && 
+                        !mobileControlsContainer.contains(e.target) && 
+                        !mobileMenuButton.contains(e.target)) {
+                        closeMobileMenu();
+                    }
+                });
+                
+                setupSaveLoadSystem();
+                setupThemeCustomizer();
+                setupProfileSystem();
+                setupNotesSystem();
+                setupTimerWallpaper();
+                setupTodoWallpaper();
+                setupImageWallpaper();
+            }
+            
+            function handleMouseMove(e) {
+                if (isMobile) return;
+                
+                const x = e.clientX;
+                const y = e.clientY;
+                
+                if (x < 50 && y < 50) {
+                    if (!isControlPanelVisible) {
+                        controlPanel.classList.add('visible');
+                        isControlPanelVisible = true;
+                    }
+                } else if (x > controlPanel.offsetWidth || y > controlPanel.offsetHeight) {
+                    if (isControlPanelVisible && !controlPanel.matches(':hover')) {
+                        controlPanel.classList.remove('visible');
+                        isControlPanelVisible = false;
+                    }
+                }
+                
+                if (x < 100) {
+                    prevWallpaperArrow.classList.add('visible');
+                } else {
+                    prevWallpaperArrow.classList.remove('visible');
+                }
+                
+                if (x > window.innerWidth - 100) {
+                    nextWallpaperArrow.classList.add('visible');
+                } else {
+                    nextWallpaperArrow.classList.remove('visible');
+                }
+                
+                if (x > window.innerWidth - 100 && y < 100) {
+                    profileHover.classList.add('visible');
+                } else {
+                    profileHover.classList.remove('visible');
+                }
+            }
+            
+            function toggleMobileMenu() {
+                if (isMobileMenuOpen) {
+                    closeMobileMenu();
+                } else {
+                    openMobileMenu();
+                }
+            }
+            
+            function openMobileMenu() {
+                mobileControlsContainer.classList.add('visible');
+                mobileMenuButton.classList.add('active');
+                isMobileMenuOpen = true;
+            }
+            
+            function closeMobileMenu() {
+                mobileControlsContainer.classList.remove('visible');
+                mobileMenuButton.classList.remove('active');
+                isMobileMenuOpen = false;
+            }
+            
+            function changeWallpaper(direction) {
+                currentWallpaperIndex += direction;
+                
+                if (currentWallpaperIndex < 0) {
+                    currentWallpaperIndex = wallpapers.length - 1;
+                } else if (currentWallpaperIndex >= wallpapers.length) {
+                    currentWallpaperIndex = 0;
+                }
+                
+                showWallpaper(currentWallpaperIndex);
+            }
+            
+            function showWallpaper(index) {
+                wallpapers.forEach(wallpaper => {
+                    wallpaper.classList.remove('active');
+                });
+                
+                if (wallpapers[index]) {
+                    wallpapers[index].classList.add('active');
+                }
+            }
+            
+            function toggleModal(modal) {
+                if (modal.classList.contains('visible')) {
+                    closeModal(modal);
+                } else {
+                    openModal(modal);
+                }
+            }
+            
+            function openModal(modal) {
+                modal.style.display = 'flex';
+                setTimeout(() => {
+                    modal.classList.add('visible');
+                }, 10);
+            }
+            
+            function closeModal(modal) {
+                modal.classList.remove('visible');
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 300);
+            }
+            
+            function startTimer() {
+                if (document.getElementById('timer-wallpaper').classList.contains('active')) {
+                    document.getElementById('start-timer').click();
+                } else {
+                    const timerIndex = Array.from(wallpapers).findIndex(w => w.id === 'timer-wallpaper');
+                    if (timerIndex !== -1) {
+                        currentWallpaperIndex = timerIndex;
+                        showWallpaper(currentWallpaperIndex);
+                        setTimeout(() => {
+                            document.getElementById('start-timer').click();
+                        }, 500);
+                    }
+                }
+            }
+            
+            function togglePauseTimer() {
+                if (document.getElementById('timer-wallpaper').classList.contains('active')) {
+                    document.getElementById('pause-timer').click();
+                }
+            }
+            
+            function addFiveMinutes() {
+                if (document.getElementById('timer-wallpaper').classList.contains('active')) {
+                    document.getElementById('add-time').click();
+                }
+            }
+            
+            function resetTimer() {
+                if (document.getElementById('timer-wallpaper').classList.contains('active')) {
+                    document.getElementById('reset-timer').click();
+                }
+            }
+            
+            function addTodo() {
+                if (!document.getElementById('todo-wallpaper').classList.contains('active')) {
+                    const todoIndex = Array.from(wallpapers).findIndex(w => w.id === 'todo-wallpaper');
+                    if (todoIndex !== -1) {
+                        currentWallpaperIndex = todoIndex;
+                        showWallpaper(currentWallpaperIndex);
+                    }
+                }
+                
+                document.getElementById('new-task-input').focus();
+            }
+            
+            function clearCompletedTodos() {
+                const taskList = document.getElementById('task-list');
+                const tasks = taskList.querySelectorAll('.task');
+                
+                tasks.forEach(task => {
+                    if (task.querySelector('.checked-text')) {
+                        task.remove();
+                    }
+                });
+                saveTodos();
+            }
+            
+            function setupSaveLoadSystem() {
+                const saveTab = document.querySelector('[data-tab="save"]');
+                const loadTab = document.querySelector('[data-tab="load"]');
+                const exportImportTab = document.querySelector('[data-tab="export-import"]');
+                const saveSection = document.getElementById('save-section');
+                const loadSection = document.getElementById('load-section');
+                const exportImportTabs = document.getElementById('export-import-tabs');
+                const exportTab = document.querySelector('[data-tab="export"]');
+                const importTab = document.querySelector('[data-tab="import"]');
+                const exportSection = document.getElementById('export-section');
+                const importSection = document.getElementById('import-section');
+                
+                [saveTab, loadTab, exportImportTab].forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        document.querySelectorAll('.save-load-tab').forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        
+                        saveSection.classList.remove('active');
+                        loadSection.classList.remove('active');
+                        exportImportTabs.style.display = 'none';
+                        exportSection.style.display = 'none';
+                        importSection.style.display = 'none';
+                        
+                        if (tab === saveTab) {
+                            saveSection.classList.add('active');
+                        } else if (tab === loadTab) {
+                            loadSection.classList.add('active');
+                        } else if (tab === exportImportTab) {
+                            exportImportTabs.style.display = 'flex';
+                            exportSection.style.display = 'block';
+                            exportSection.classList.add('active');
+                            generateExportCode();
+                        }
+                    });
+                });
+                
+                if (exportTab && importTab) {
+                    [exportTab, importTab].forEach(tab => {
+                        tab.addEventListener('click', () => {
+                            document.querySelectorAll('.export-import-tab').forEach(t => t.classList.remove('active'));
+                            tab.classList.add('active');
+                            
+                            exportSection.style.display = 'none';
+                            importSection.style.display = 'none';
+                            
+                            if (tab === exportTab) {
+                                exportSection.style.display = 'block';
+                                exportSection.classList.add('active');
+                                generateExportCode();
+                            } else {
+                                importSection.style.display = 'block';
+                                importSection.classList.add('active');
+                            }
+                        });
+                    });
+                }
+                
+                document.getElementById('save-button').addEventListener('click', saveProgress);
+                document.getElementById('load-button').addEventListener('click', loadProgress);
+                document.getElementById('copy-export').addEventListener('click', copyExportCode);
+                document.getElementById('email-export').addEventListener('click', emailExportCode);
+                document.getElementById('import-button').addEventListener('click', importData);
+            }
+            
+            function saveProgress() {
+                const codeWord = document.getElementById('code-word-input').value.trim();
+                if (!codeWord) {
+                    document.getElementById('save-status').textContent = 'Please enter a code word';
+                    return;
+                }
+                
+                const saveData = {
+                    profile: localStorage.getItem('userProfile'),
+                    todos: localStorage.getItem('todos'),
+                    timer: {
+                        endTime: localStorage.getItem('timerEndTime'),
+                        paused: localStorage.getItem('timerPaused'),
+                        remaining: localStorage.getItem('timerRemaining')
+                    },
+                    notes: localStorage.getItem('userNotes'),
+                    theme: {
+                        color: localStorage.getItem('mainColor') || '#00ffff',
+                        glow: localStorage.getItem('glowIntensity') || '1'
+                    },
+                    timestamp: Date.now()
+                };
+                
+                localStorage.setItem(`save_${codeWord}`, JSON.stringify(saveData));
+                document.getElementById('save-status').textContent = 'Progress saved successfully!';
+                document.getElementById('code-word-input').value = '';
+            }
+            
+            function loadProgress() {
+                const codeWord = document.getElementById('load-code-input').value.trim();
+                if (!codeWord) {
+                    document.getElementById('load-status').textContent = 'Please enter a code word';
+                    return;
+                }
+                
+                const saveData = localStorage.getItem(`save_${codeWord}`);
+                if (!saveData) {
+                    document.getElementById('load-status').textContent = 'No saved progress found for this code word';
+                    return;
+                }
+                
+                try {
+                    const data = JSON.parse(saveData);
+                    
+                    if (data.profile) localStorage.setItem('userProfile', data.profile);
+                    if (data.todos) localStorage.setItem('todos', data.todos);
+                    if (data.timer) {
+                        if (data.timer.endTime) localStorage.setItem('timerEndTime', data.timer.endTime);
+                        if (data.timer.paused) localStorage.setItem('timerPaused', data.timer.paused);
+                        if (data.timer.remaining) localStorage.setItem('timerRemaining', data.timer.remaining);
+                    }
+                    if (data.notes) localStorage.setItem('userNotes', data.notes);
+                    if (data.theme) {
+                        localStorage.setItem('mainColor', data.theme.color);
+                        localStorage.setItem('glowIntensity', data.theme.glow);
+                        applyTheme(data.theme.color, data.theme.glow);
+                    }
+                    
+                    document.getElementById('load-status').textContent = 'Progress loaded successfully!';
+                    location.reload();
+                } catch (e) {
+                    document.getElementById('load-status').textContent = 'Error loading progress';
+                }
+            }
+            
+            function generateExportCode() {
+                const exportData = {
+                    profile: localStorage.getItem('userProfile'),
+                    todos: localStorage.getItem('todos'),
+                    timer: {
+                        endTime: localStorage.getItem('timerEndTime'),
+                        paused: localStorage.getItem('timerPaused'),
+                        remaining: localStorage.getItem('timerRemaining')
+                    },
+                    notes: localStorage.getItem('userNotes'),
+                    theme: {
+                        color: localStorage.getItem('mainColor') || '#00ffff',
+                        glow: localStorage.getItem('glowIntensity') || '1'
+                    },
+                    timestamp: Date.now(),
+                    version: '1.0'
+                };
+                
+                const exportString = btoa(JSON.stringify(exportData));
+                document.getElementById('export-code').value = exportString;
+            }
+            
+            function copyExportCode() {
+                const exportCode = document.getElementById('export-code');
+                exportCode.select();
+                document.execCommand('copy');
+                
+                const status = document.getElementById('export-status');
+                status.textContent = 'Export code copied to clipboard!';
+                setTimeout(() => {
+                    status.textContent = '';
+                }, 3000);
+            }
+            
+            function emailExportCode() {
+                const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+                const email = profile.email;
+                
+                if (!email) {
+                    document.getElementById('export-status').textContent = 'Please set your email in Profile Settings first';
+                    return;
+                }
+                
+                const exportCode = document.getElementById('export-code').value;
+                const subject = 'Frost Domain Export Code';
+                const body = `Here is your Frost Domain export code:\n\n${exportCode}\n\nUse this code to import your data on another device.`;
+                
+                window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+                document.getElementById('export-status').textContent = 'Email opened with export code';
+            }
+            
+            function importData() {
+                const importCode = document.getElementById('import-code').value.trim();
+                if (!importCode) {
+                    document.getElementById('import-status').textContent = 'Please paste an export code';
+                    return;
+                }
+                
+                try {
+                    // Try to parse the import code
+                    let importData;
+                    
+                    // First, try to decode from base64
+                    try {
+                        importData = JSON.parse(atob(importCode));
+                    } catch (e1) {
+                        // If base64 decode fails, try to parse directly as JSON
+                        try {
+                            importData = JSON.parse(importCode);
+                        } catch (e2) {
+                            throw new Error('Invalid export code format');
+                        }
+                    }
+                    
+                    // Store the imported data in localStorage
+                    if (importData.profile) {
+                        localStorage.setItem('userProfile', importData.profile);
+                    }
+                    
+                    // Import todos - CRITICAL FIX: Make sure todos data is properly stored
+                    if (importData.todos) {
+                        localStorage.setItem('todos', importData.todos);
+                    }
+                    
+                    // Import timer data
+                    if (importData.timer) {
+                        if (importData.timer.endTime) {
+                            localStorage.setItem('timerEndTime', importData.timer.endTime);
+                        }
+                        if (importData.timer.paused) {
+                            localStorage.setItem('timerPaused', importData.timer.paused);
+                        }
+                        if (importData.timer.remaining) {
+                            localStorage.setItem('timerRemaining', importData.timer.remaining);
+                        }
+                    }
+                    
+                    // Import notes
+                    if (importData.notes) {
+                        localStorage.setItem('userNotes', importData.notes);
+                    }
+                    
+                    // Import theme
+                    if (importData.theme) {
+                        localStorage.setItem('mainColor', importData.theme.color || '#00ffff');
+                        localStorage.setItem('glowIntensity', importData.theme.glow || '1');
+                        applyTheme(importData.theme.color || '#00ffff', importData.theme.glow || '1');
+                    }
+                    
+                    document.getElementById('import-status').textContent = 'Data imported successfully!';
+                    document.getElementById('import-status').style.color = 'var(--main-color)';
+                    
+                    // Load the todos immediately so they show up
+                    loadTodos();
+                    
+                    // Close modal and refresh after delay
+                    setTimeout(() => {
+                        closeModal(saveLoadModal);
+                        setTimeout(() => {
+                            location.reload();
+                        }, 300);
+                    }, 1500);
+                    
+                } catch (e) {
+                    console.error('Import error:', e);
+                    document.getElementById('import-status').textContent = 'Error importing data - invalid code format';
+                    document.getElementById('import-status').style.color = 'red';
+                }
+            }
+            
+            function setupThemeCustomizer() {
+                const colorPicker = document.getElementById('color-picker');
+                const glowSlider = document.getElementById('glow-slider');
+                const glowValue = document.getElementById('glow-value');
+                const applyThemeBtn = document.getElementById('apply-theme');
+                
+                const savedColor = localStorage.getItem('mainColor') || '#00ffff';
+                const savedGlow = localStorage.getItem('glowIntensity') || '1';
+                
+                colorPicker.value = savedColor;
+                glowSlider.value = savedGlow;
+                glowValue.textContent = savedGlow;
+                
+                colorPicker.addEventListener('input', () => {
+                    previewTheme(colorPicker.value, glowSlider.value);
+                });
+                
+                glowSlider.addEventListener('input', () => {
+                    glowValue.textContent = glowSlider.value;
+                    previewTheme(colorPicker.value, glowSlider.value);
+                });
+                
+                applyThemeBtn.addEventListener('click', () => {
+                    applyTheme(colorPicker.value, glowSlider.value);
+                    closeModal(themeModal);
+                });
+            }
+            
+            function previewTheme(color, glow) {
+                document.documentElement.style.setProperty('--main-color', color);
+                document.documentElement.style.setProperty('--glow-intensity', glow);
+            }
+            
+            function applyTheme(color, glow) {
+                localStorage.setItem('mainColor', color);
+                localStorage.setItem('glowIntensity', glow);
+                
+                document.documentElement.style.setProperty('--main-color', color);
+                document.documentElement.style.setProperty('--glow-intensity', glow);
+            }
+            
+            function setupProfileSystem() {
+                const profileName = document.getElementById('profile-name');
+                const profileEmail = document.getElementById('profile-email');
+                const profileAvatarUrl = document.getElementById('profile-avatar-url');
+                const saveProfileBtn = document.getElementById('save-profile');
+                const profileNameDisplay = document.getElementById('profile-name-display');
+                const profileAvatar = document.getElementById('profile-avatar');
+                
+                const savedProfile = localStorage.getItem('userProfile');
+                if (savedProfile) {
+                    const profile = JSON.parse(savedProfile);
+                    profileName.value = profile.name || '';
+                    profileEmail.value = profile.email || '';
+                    profileAvatarUrl.value = profile.avatarUrl || '';
+                    
+                    profileNameDisplay.textContent = profile.name || 'User';
+                    updateProfileAvatar(profile.avatarUrl, profile.name);
+                }
+                
+                profileName.addEventListener('input', () => {
+                    profileNameDisplay.textContent = profileName.value || 'User';
+                });
+                
+                profileAvatarUrl.addEventListener('input', () => {
+                    updateProfileAvatar(profileAvatarUrl.value, profileName.value);
+                });
+                
+                saveProfileBtn.addEventListener('click', saveProfile);
+            }
+            
+            function updateProfileAvatar(avatarUrl, name) {
+                const profileAvatar = document.getElementById('profile-avatar');
+                const profileHoverAvatar = document.getElementById('profile-hover-avatar');
+                
+                if (avatarUrl) {
+                    profileAvatar.style.backgroundImage = `url(${avatarUrl})`;
+                    profileAvatar.style.backgroundSize = 'cover';
+                    profileAvatar.textContent = '';
+                    
+                    profileHoverAvatar.style.backgroundImage = `url(${avatarUrl})`;
+                    profileHoverAvatar.style.backgroundSize = 'cover';
+                    profileHoverAvatar.textContent = '';
+                } else {
+                    profileAvatar.style.backgroundImage = '';
+                    profileAvatar.textContent = name ? name.charAt(0).toUpperCase() : '👤';
+                    
+                    profileHoverAvatar.style.backgroundImage = '';
+                    profileHoverAvatar.textContent = name ? name.charAt(0).toUpperCase() : '👤';
+                }
+            }
+            
+            function saveProfile() {
+                const profile = {
+                    name: document.getElementById('profile-name').value,
+                    email: document.getElementById('profile-email').value,
+                    avatarUrl: document.getElementById('profile-avatar-url').value
+                };
+                
+                localStorage.setItem('userProfile', JSON.stringify(profile));
+                loadProfile();
+                closeModal(profileModal);
+            }
+            
+            function loadProfile() {
+                const savedProfile = localStorage.getItem('userProfile');
+                if (savedProfile) {
+                    const profile = JSON.parse(savedProfile);
+                    profileHoverName.textContent = profile.name || 'User';
+                    updateProfileAvatar(profile.avatarUrl, profile.name);
+                }
+            }
+            
+            function setupNotesSystem() {
+                const notesText = document.getElementById('notes-text');
+                const saveNotesBtn = document.getElementById('save-notes');
+                
+                const savedNotes = localStorage.getItem('userNotes');
+                if (savedNotes) {
+                    notesText.value = savedNotes;
+                }
+                
+                saveNotesBtn.addEventListener('click', () => {
+                    localStorage.setItem('userNotes', notesText.value);
+                    closeModal(notesModal);
+                });
+            }
+            
+            function setupTimerWallpaper() {
+                const timerPopup = document.getElementById('timer-popup');
+                const hoursInput = document.getElementById('hours');
+                const minutesInput = document.getElementById('minutes');
+                const secondsInput = document.getElementById('seconds');
+                const startTimerBtn = document.getElementById('start-timer');
+                const activeTimer = document.getElementById('active-timer');
+                const controlButtons = document.getElementById('control-buttons');
+                const addTimeBtn = document.getElementById('add-time');
+                const pauseTimerBtn = document.getElementById('pause-timer');
+                const resetTimerBtn = document.getElementById('reset-timer');
+                
+                let countdownInterval;
+                let binaryInterval;
+                let totalSeconds = 0;
+                let remainingSeconds = 0;
+                let isTimerRunning = false;
+                let isPaused = false;
+
+                document.addEventListener('DOMContentLoaded', initializeTimer);
+                startTimerBtn.addEventListener('click', startTimer);
+                addTimeBtn.addEventListener('click', addFiveMinutes);
+                pauseTimerBtn.addEventListener('click', togglePause);
+                resetTimerBtn.addEventListener('click', resetTimer);
+                document.addEventListener('keypress', (e) => e.key === 'Enter' && startTimer());
+                document.addEventListener('keydown', (e) => e.key === 'R' && e.shiftKey && resetTimer());
+
+                function initializeTimer() {
+                    const savedEndTime = localStorage.getItem('timerEndTime');
+                    const savedPaused = localStorage.getItem('timerPaused');
+                    const savedRemaining = localStorage.getItem('timerRemaining');
+                    
+                    if (savedEndTime) {
+                        const now = Date.now();
+                        const endTime = parseInt(savedEndTime);
+                        
+                        if (savedPaused === 'true' && savedRemaining) {
+                            remainingSeconds = parseInt(savedRemaining);
+                            timerPopup.style.display = 'none';
+                            activeTimer.style.display = 'block';
+                            controlButtons.style.display = 'flex';
+                            isPaused = true;
+                            pauseTimerBtn.textContent = '▶';
+                            updateTimerDisplay();
+                        } else if (endTime > now) {
+                            remainingSeconds = Math.floor((endTime - now) / 1000);
+                            timerPopup.style.display = 'none';
+                            activeTimer.style.display = 'block';
+                            controlButtons.style.display = 'flex';
+                            startCountdown();
+                        } else {
+                            localStorage.removeItem('timerEndTime');
+                            localStorage.removeItem('timerPaused');
+                            localStorage.removeItem('timerRemaining');
+                        }
+                    }
+                }
+
+                function startTimer() {
+                    const hours = parseInt(hoursInput.value) || 0;
+                    const minutes = parseInt(minutesInput.value) || 0;
+                    const seconds = parseInt(secondsInput.value) || 0;
+
+                    totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
+                    if (totalSeconds <= 0) return;
+
+                    const endTime = Date.now() + (totalSeconds * 1000);
+                    localStorage.setItem('timerEndTime', endTime.toString());
+                    localStorage.setItem('timerPaused', 'false');
+                    localStorage.removeItem('timerRemaining');
+                    
+                    remainingSeconds = totalSeconds;
+                    timerPopup.style.display = 'none';
+                    activeTimer.style.display = 'block';
+                    controlButtons.style.display = 'flex';
+                    isPaused = false;
+                    pauseTimerBtn.textContent = 'II';
+                    startBinaryStream();
+                    startCountdown();
+                }
+
+                function startCountdown() {
+                    if (isTimerRunning) clearInterval(countdownInterval);
+                    isTimerRunning = true;
+                    
+                    countdownInterval = setInterval(() => {
+                        if (remainingSeconds > 0 && !isPaused) {
+                            remainingSeconds--;
+                            updateTimerDisplay();
+                            
+                            const endTime = Date.now() + (remainingSeconds * 1000);
+                            localStorage.setItem('timerEndTime', endTime.toString());
+                            localStorage.setItem('timerPaused', 'false');
+                            localStorage.removeItem('timerRemaining');
+                        } else if (remainingSeconds <= 0) {
+                            clearInterval(countdownInterval);
+                            isTimerRunning = false;
+                            localStorage.removeItem('timerEndTime');
+                            localStorage.removeItem('timerPaused');
+                            localStorage.removeItem('timerRemaining');
+                            resetTimer();
+                        }
+                    }, 1000);
+                }
+
+                function updateTimerDisplay() {
+                    const hours = Math.floor(remainingSeconds / 3600);
+                    const mins = Math.floor((remainingSeconds % 3600) / 60);
+                    const secs = remainingSeconds % 60;
+                    activeTimer.textContent = `${hours}:${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+                }
+
+                function addFiveMinutes() {
+                    if (!isTimerRunning && remainingSeconds === 0) return;
+                    
+                    remainingSeconds += 300;
+                    updateTimerDisplay();
+                    
+                    if (!isPaused) {
+                        const endTime = Date.now() + (remainingSeconds * 1000);
+                        localStorage.setItem('timerEndTime', endTime.toString());
+                    } else {
+                        localStorage.setItem('timerRemaining', remainingSeconds.toString());
+                    }
+                    
+                    activeTimer.style.color = 'lime';
+                    setTimeout(() => {
+                        activeTimer.style.color = 'var(--main-color)';
+                    }, 300);
+                }
+
+                function togglePause() {
+                    if (!isTimerRunning && remainingSeconds === 0) return;
+                    
+                    isPaused = !isPaused;
+                    
+                    if (isPaused) {
+                        pauseTimerBtn.textContent = '▶';
+                        localStorage.setItem('timerPaused', 'true');
+                        localStorage.setItem('timerRemaining', remainingSeconds.toString());
+                    } else {
+                        pauseTimerBtn.textContent = 'II';
+                        localStorage.setItem('timerPaused', 'false');
+                        localStorage.removeItem('timerRemaining');
+                        
+                        const endTime = Date.now() + (remainingSeconds * 1000);
+                        localStorage.setItem('timerEndTime', endTime.toString());
+                    }
+                }
+
+                function resetTimer() {
+                    clearInterval(countdownInterval);
+                    clearInterval(binaryInterval);
+                    document.querySelectorAll('.binary-stream').forEach(el => el.remove());
+                    timerPopup.style.display = 'block';
+                    activeTimer.style.display = 'none';
+                    controlButtons.style.display = 'none';
+                    localStorage.removeItem('timerEndTime');
+                    localStorage.removeItem('timerPaused');
+                    localStorage.removeItem('timerRemaining');
+                    isTimerRunning = false;
+                    isPaused = false;
+                    pauseTimerBtn.textContent = 'II';
+                    
+                    hoursInput.value = 0;
+                    minutesInput.value = 25;
+                    secondsInput.value = 0;
+                }
+
+                function startBinaryStream() {
+                    binaryInterval = setInterval(() => {
+                        if (isPaused) return;
+                        
+                        const binary = document.createElement('div');
+                        binary.className = 'binary-stream';
+                        binary.textContent = Math.random() > 0.5 ? '1' : '0';
+                        
+                        const angle = Math.random() * 2 * Math.PI;
+                        binary.style.setProperty('--tx', Math.cos(angle));
+                        binary.style.setProperty('--ty', Math.sin(angle));
+                        
+                        binary.style.left = '50%';
+                        binary.style.top = '50%';
+                        binary.style.animationDuration = `${Math.random() * 2 + 1}s`;
+                        
+                        document.getElementById('timer-wallpaper').appendChild(binary);
+                        setTimeout(() => binary.remove(), 3000);
+                    }, 50);
+                }
+            }
+            
+            function loadTodos() {
+                const taskList = document.getElementById('task-list');
+                const savedTodos = localStorage.getItem('todos');
+                
+                if (savedTodos) {
+                    try {
+                        const todos = JSON.parse(savedTodos);
+                        taskList.innerHTML = '';
+                        
+                        todos.forEach(todo => {
+                            const listItem = document.createElement('li');
+                            listItem.className = 'task';
+
+                            const checkBox = document.createElement('div');
+                            checkBox.className = 'check-box';
+                            if (todo.completed) {
+                                checkBox.classList.add('checked');
+                            }
+                            
+                            checkBox.addEventListener('click', function() {
+                                taskContent.classList.toggle('checked-text');
+                                checkBox.classList.toggle('checked');
+                                checkCompletion();
+                                saveTodos();
+                            });
+
+                            const taskContent = document.createElement('span');
+                            taskContent.className = 'task-text';
+                            taskContent.innerText = todo.text;
+                            if (todo.completed) {
+                                taskContent.classList.add('checked-text');
+                            }
+
+                            listItem.appendChild(checkBox);
+                            listItem.appendChild(taskContent);
+                            taskList.appendChild(listItem);
+                        });
+                    } catch (e) {
+                        console.error('Error loading todos:', e);
+                    }
+                }
+            }
+            
+            function saveTodos() {
+                const tasks = document.querySelectorAll('#task-list .task');
+                const todos = [];
+                
+                tasks.forEach(task => {
+                    const text = task.querySelector('.task-text').textContent;
+                    const completed = task.querySelector('.check-box').classList.contains('checked');
+                    todos.push({ text, completed });
+                });
+                
+                localStorage.setItem('todos', JSON.stringify(todos));
+            }
+            
+            function setupTodoWallpaper() {
+                const addTaskButton = document.getElementById('add-task');
+                const modal = document.getElementById('modal');
+                const newTaskInput = document.getElementById('new-task-input');
+                const taskList = document.getElementById('task-list');
+                const maxTasks = 10;
+                let taskCount = taskList.children.length;
+
+                function openModal() {
+                    modal.classList.add('visible');
+                    modal.style.display = 'block';
+                    newTaskInput.value = '';
+                    newTaskInput.focus();
+                }
+
+                addTaskButton.addEventListener('click', openModal);
+
+                newTaskInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const taskText = newTaskInput.value.trim();
+                        if (taskText && taskCount < maxTasks) {
+                            addTask(taskText);
+                            newTaskInput.value = '';
+                            newTaskInput.focus();
+                        } else if (taskCount >= maxTasks) {
+                        }
+                    }
+                });
+
+                function addTask(taskText) {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'task';
+
+                    const checkBox = document.createElement('div');
+                    checkBox.className = 'check-box';
+                    checkBox.addEventListener('click', function() {
+                        taskContent.classList.toggle('checked-text');
+                        checkBox.classList.toggle('checked');
+                        checkCompletion();
+                        saveTodos();
+                    });
+
+                    const taskContent = document.createElement('span');
+                    taskContent.className = 'task-text';
+                    taskContent.innerText = taskText;
+
+                    listItem.appendChild(checkBox);
+                    listItem.appendChild(taskContent);
+                    taskList.appendChild(listItem);
+
+                    taskCount++;
+                    saveTodos();
+                }
+
+                function checkCompletion() {
+                    const totalTasks = taskList.children.length;
+                    const completedTasks = Array.from(taskList.children).filter(task => task.querySelector('.checked-text')).length;
+
+                    if (totalTasks > 0 && completedTasks === totalTasks) {
+                        celebrate();
+                    }
+                }
+
+                function celebrate() {
+                    const celebrationText = document.createElement('div');
+                    celebrationText.className = 'celebration';
+                    celebrationText.innerText = '❄️ All tasks completed ❄️';
+                    document.getElementById('todo-wallpaper').appendChild(celebrationText);
+
+                    for (let i = 0; i < 50; i++) {
+                        createConfetti();
+                    }
+
+                    setTimeout(() => {
+                        celebrationText.remove();
+                        fadeOutTasks();
+                    }, 3000);
+                }
+
+                function fadeOutTasks() {
+                    taskList.style.opacity = 0;
+                    addTaskButton.style.opacity = 0;
+
+                    setTimeout(() => {
+                        taskList.innerHTML = '';
+                        taskCount = 0;
+                        taskList.style.opacity = 1;
+                        addTaskButton.style.opacity = 1;
+                        saveTodos();
+                    }, 1000);
+                }
+
+                function createConfetti() {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.backgroundColor = getRandomColor();
+
+                    document.getElementById('todo-wallpaper').appendChild(confetti);
+
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, 1500);
+                }
+
+                function getRandomColor() {
+                    const colors = ['var(--main-color)', 'lightblue', 'blue', 'magenta', 'yellow'];
+                    return colors[Math.floor(Math.random() * colors.length)];
+                }
+
+                window.addEventListener('click', function (event) {
+                    if (event.target === modal) {
+                        closeModal();
+                    }
+                });
+
+                window.addEventListener('keydown', function (event) {
+                    if (event.key === 'Escape') {
+                        closeModal();
+                    }
+                    else if (event.key === 'c' || event.key === 'C') {
+                        if (newTaskInput.value.trim() === '') {
+                            closeModal();
+                        }
+                    }
+                });
+
+                function closeModal() {
+                    modal.classList.remove('visible');
+                    modal.style.display = 'none';
+                }
+                
+                // Initialize with saved todos
+                loadTodos();
+            }
+            
+            function setupImageWallpaper() {
+                const fileInput = document.getElementById('fileInput');
+                const fullscreenMode = document.getElementById('fullscreenMode');
+                const fullscreenImage = document.getElementById('fullscreenImage');
+                const fileInfo = document.getElementById('fileInfo');
+                const container = document.querySelector('#image-wallpaper .container');
+
+                fileInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            
+                            reader.onload = function(e) {
+                                container.style.display = 'none';
+                                fullscreenMode.style.display = 'block';
+                                fullscreenImage.src = e.target.result;
+                                fileInfo.textContent = `Loaded: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                            };
+                            
+                            reader.readAsDataURL(file);
+                        } else {
+                        }
+                    }
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && fullscreenMode.style.display === 'block') {
+                        exitFullscreen();
+                    }
+                });
+
+                function exitFullscreen() {
+                    container.style.display = 'block';
+                    fullscreenMode.style.display = 'none';
+                    fileInput.value = '';
+                }
+            }
+            
+            document.addEventListener('keydown', (e) => {
+                if (document.querySelector('.modal.visible')) return;
+                
+                switch(e.key) {
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        changeWallpaper(-1);
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        changeWallpaper(1);
+                        break;
+                    case 's':
+                    case 'S':
+                        if (e.ctrlKey && e.altKey) {
+                            e.preventDefault();
+                            toggleModal(saveLoadModal);
+                        }
+                        break;
+                    case 'c':
+                    case 'C':
+                        if (e.ctrlKey && e.shiftKey) {
+                            e.preventDefault();
+                            toggleModal(themeModal);
+                        }
+                        break;
+                    case 'p':
+                    case 'P':
+                        if (e.ctrlKey && e.altKey) {
+                            e.preventDefault();
+                            toggleModal(profileModal);
+                        }
+                        break;
+                    case 'n':
+                    case 'N':
+                        if (e.altKey) {
+                            e.preventDefault();
+                            toggleModal(notesModal);
+                        }
+                        break;
+                    case 'i':
+                    case 'I':
+                        if (e.altKey) {
+                            e.preventDefault();
+                            toggleModal(infoModal);
+                        }
+                        break;
+                    case 'Escape':
+                        document.querySelectorAll('.modal.visible').forEach(modal => {
+                            closeModal(modal);
+                        });
+                        break;
+                    case 'Enter':
+                        if (document.getElementById('timer-wallpaper').classList.contains('active')) {
+                            const startBtn = document.getElementById('start-timer');
+                            if (startBtn && startBtn.style.display !== 'none') {
+                                startBtn.click();
+                            }
+                        }
+                        break;
+                    case 'R':
+                        if (e.shiftKey) {
+                            if (document.getElementById('timer-wallpaper').classList.contains('active')) {
+                                document.getElementById('reset-timer').click();
+                            }
+                        }
+                        break;
+                    case '+':
+                        if (document.getElementById('timer-wallpaper').classList.contains('active')) {
+                            document.getElementById('add-time').click();
+                        }
+                        break;
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
