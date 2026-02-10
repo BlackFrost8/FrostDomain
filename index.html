@@ -139,6 +139,8 @@
             justify-content: center;
             font-size: 0.8rem;
             border: 1px solid var(--main-color);
+            background-size: cover;
+            background-position: center;
         }
 
         #profile-hover-name {
@@ -485,6 +487,8 @@
             align-items: center;
             justify-content: center;
             font-size: 2rem;
+            background-size: cover;
+            background-position: center;
         }
 
         #save-profile {
@@ -507,6 +511,7 @@
             height: 400px;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
         #notes-text {
@@ -571,6 +576,12 @@
             margin: 0;
             font-family: 'Courier New', Courier, monospace;
             overflow: hidden;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
 
         #timer-popup {
@@ -603,12 +614,14 @@
         .time-input {
             background-color: black;
             color: var(--main-color);
-            border: 1px solid var(--main-color) !important;
+            border: 1px solid var(--main-color);
             padding: 8px;
             width: 50px;
             text-align: center;
             -moz-appearance: textfield;
             outline: none;
+            font-size: 16px;
+            pointer-events: auto;
         }
 
         .time-input::-webkit-outer-spin-button,
@@ -624,6 +637,8 @@
             padding: 8px 20px;
             cursor: pointer;
             transition: all 0.3s;
+            font-size: 16px;
+            pointer-events: auto;
         }
 
         #start-timer:hover {
@@ -641,6 +656,7 @@
             color: var(--main-color);
             text-shadow: 0 0 calc(10px * var(--glow-intensity)) var(--main-color);
             z-index: 100;
+            pointer-events: none;
         }
 
         .binary-stream {
@@ -747,6 +763,23 @@
             width: 300px;
             z-index: 1;
             transition: opacity 1s ease;
+            max-height: 60vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            margin-bottom: 20px;
+        }
+
+        #todo-wallpaper #task-list::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        #todo-wallpaper #task-list::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        #todo-wallpaper #task-list::-webkit-scrollbar-thumb {
+            background: var(--main-color);
+            border-radius: 2px;
         }
 
         #todo-wallpaper .task {
@@ -764,6 +797,7 @@
             margin-right: 10px;
             cursor: pointer;
             transition: background-color 0.3s ease;
+            flex-shrink: 0;
         }
 
         #todo-wallpaper .checked {
@@ -773,6 +807,8 @@
         #todo-wallpaper .task-text {
             flex-grow: 1;
             transition: text-decoration 0.3s ease, opacity 0.3s ease;
+            word-break: break-word;
+            max-width: calc(100% - 30px);
         }
 
         #todo-wallpaper .checked-text {
@@ -822,32 +858,39 @@
         }
 
         #todo-wallpaper #new-task-input::placeholder {
-            color: #006b6b;
-            opacity: 1;
+            color: var(--main-color);
+            opacity: 0.7;
             font-family: 'Courier New', Courier, monospace;
         }
 
         #todo-wallpaper #new-task-input:focus {
             outline: none;
+            box-shadow: 0 0 10px var(--main-color);
         }
 
         #todo-wallpaper .celebration {
-            position: relative;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             font-size: 3em;  
             animation: pop 0.5s ease-in-out forwards;
+            z-index: 1000;
+            pointer-events: none;
+            text-align: center;
         }
 
         @keyframes pop {
             0% {
-                transform: scale(1);
+                transform: translate(-50%, -50%) scale(1);
                 opacity: 1;
             }
             50% {
-                transform: scale(1.5);
+                transform: translate(-50%, -50%) scale(1.5);
                 opacity: 0.7;
             }
             100% {
-                transform: scale(1);
+                transform: translate(-50%, -50%) scale(1);
                 opacity: 0;
             }
         }
@@ -858,6 +901,8 @@
             height: 10px;
             background-color: var(--main-color);
             animation: confetti-fall 1.5s ease-in forwards;
+            pointer-events: none;
+            z-index: 999;
         }
 
         @keyframes confetti-fall {
@@ -1025,6 +1070,59 @@
             font-size: 0.9rem;
         }
 
+        .profile-upload-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: black;
+            color: var(--main-color);
+            border: 1px solid var(--main-color);
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+
+        .profile-upload-btn:hover {
+            background-color: var(--main-color);
+            color: black;
+        }
+
+        .fullscreen-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--main-color);
+            border-radius: 50%;
+            color: var(--main-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 2001;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            opacity: 0.6;
+            line-height: 1;
+            padding: 0;
+        }
+
+        .fullscreen-toggle:hover {
+            opacity: 1;
+            transform: scale(1.1);
+            background: var(--main-color);
+            color: black;
+        }
+
+        .fullscreen-toggle svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
         @media (max-width: 768px) {
             .instructions {
                 font-size: 12px;
@@ -1075,10 +1173,12 @@
             .time-input {
                 width: 40px;
                 padding: 5px;
+                font-size: 14px;
             }
             
             #todo-wallpaper #task-list {
                 width: 90%;
+                max-height: 50vh;
             }
             
             #image-wallpaper .container {
@@ -1109,6 +1209,19 @@
                 height: 35px;
                 font-size: 16px;
             }
+            
+            .fullscreen-toggle {
+                bottom: 15px;
+                right: 15px;
+                width: 35px;
+                height: 35px;
+                font-size: 16px;
+            }
+            
+            .fullscreen-toggle svg {
+                width: 20px;
+                height: 20px;
+            }
         }
 
         @media (min-width: 769px) {
@@ -1129,7 +1242,7 @@
 </head>
 <body>
     <div class="instructions" id="instructions">
-        Hover top-left corner for controls | Hover top-right corner for profile
+        Hover top-left corner for controls | Press Alt-I for keyboard shortcuts
     </div>
 
     <div id="control-panel">
@@ -1261,6 +1374,13 @@
         <div id="profile-hover-name">User</div>
     </div>
 
+    <!-- Fullscreen Toggle Button -->
+    <div class="fullscreen-toggle" id="fullscreen-toggle" title="Toggle Fullscreen">
+        <svg viewBox="0 0 24 24">
+            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+        </svg>
+    </div>
+
     <div id="save-load-modal" class="modal">
         <div class="modal-content">
             <button class="close-modal" id="close-save-load">×</button>
@@ -1286,7 +1406,6 @@
                 <div id="load-status"></div>
             </div>
 
-            <!-- Fixed export/import section - added proper display handling -->
             <div id="export-import-tabs" style="display: none;">
                 <div class="export-import-tab active" data-tab="export">Export</div>
                 <div class="export-import-tab" data-tab="import">Import</div>
@@ -1349,9 +1468,14 @@
             </div>
             
             <div class="profile-control">
-                <label>Profile Picture URL:</label>
-                <input type="text" id="profile-avatar-url" placeholder="Paste image URL">
+                <label>Profile Picture:</label>
+                <input type="text" id="profile-avatar-url" placeholder="Or paste image URL">
             </div>
+            
+            <div class="profile-upload-btn" id="upload-avatar-btn">
+                Upload Image from Computer
+            </div>
+            <input type="file" id="avatar-file-input" accept="image/*" style="display: none;">
             
             <button id="save-profile">Save Profile</button>
         </div>
@@ -1359,6 +1483,7 @@
 
     <div id="notes-modal" class="modal">
         <div class="modal-content" id="notes-content">
+            <button class="close-modal" id="close-notes">×</button>
             <h2>Notes</h2>
             <textarea id="notes-text" placeholder="Type your notes here..."></textarea>
             <button id="save-notes">Save Notes</button>
@@ -1375,7 +1500,6 @@
                     <li>← → Arrow Keys: Switch between wallpapers</li>
                     <li>Mouse near edges: Show navigation arrows</li>
                     <li>Hover top-left corner: Show control panel</li>
-                    <li>Hover top-right corner: Show profile</li>
                 </ul>
                 
                 <p><strong>Timer Wallpaper:</strong></p>
@@ -1391,18 +1515,20 @@
                 <ul>
                     <li>Enter: Add new task</li>
                     <li>Click checkbox: Mark task complete</li>
-                    <li>C or Escape: Close modal</li>
+                    <li>Escape: Close modal</li>
+                    <li>Click outside: Close modal</li>
                 </ul>
                 
                 <p><strong>System Controls:</strong></p>
                 <ul>
                     <li>Hover top-left corner: Show control panel with all functions</li>
                     <li>CTRL + ALT + S: Open Save/Load menu</li>
-                    <li>CTRL + SHIFT + C: Open Theme Customizer</li>
+                    <li>SHIFT + C: Open Theme Customizer</li>
                     <li>CTRL + ALT + P: Open Profile Settings</li>
                     <li>ALT + N: Open Notes</li>
                     <li>ALT + I: Open this information panel</li>
                     <li>ESC: Exit fullscreen image viewer</li>
+                    <li>F11 or Fullscreen button: Toggle fullscreen mode</li>
                 </ul>
                 
                 <p><strong>Save/Load System:</strong></p>
@@ -1464,8 +1590,7 @@
 
         <div id="image-wallpaper" class="wallpaper">
             <div class="container">
-                <h1>FROST FULLSCREEN VIEWER</h1>
-                <p>Select an image to display it in true fullscreen</p>
+                <h1>FULLSCREEN VIEWER</h1>
                 
                 <label for="fileInput" class="upload-btn">SELECT IMAGE</label>
                 <input type="file" id="fileInput" accept="image/*">
@@ -1498,6 +1623,7 @@
             const timerResetBtn = document.getElementById('timer-reset-btn');
             const todoAddBtn = document.getElementById('todo-add-btn');
             const todoClearBtn = document.getElementById('todo-clear-btn');
+            const fullscreenToggle = document.getElementById('fullscreen-toggle');
             
             const prevWallpaperBtnMobile = document.getElementById('prev-wallpaper-btn-mobile');
             const nextWallpaperBtnMobile = document.getElementById('next-wallpaper-btn-mobile');
@@ -1535,6 +1661,15 @@
             let currentWallpaperIndex = 0;
             let isControlPanelVisible = false;
             let isMobileMenuOpen = false;
+            let currentImageData = localStorage.getItem('currentImageData') || null;
+            
+            // Timer variables
+            let timerInterval = null;
+            let remainingSeconds = 0;
+            let isTimerRunning = false;
+            let isTimerPaused = false;
+            let timerEndTime = 0;
+            let lastUpdateTime = Date.now();
             
             document.addEventListener('DOMContentLoaded', initializeApp);
             
@@ -1570,6 +1705,61 @@
                 
                 loadProfile();
                 loadTodos();
+                loadImageFromStorage();
+                initializeTimerFromStorage();
+                
+                // Save wallpaper index on page unload
+                window.addEventListener('beforeunload', saveCurrentState);
+            }
+            
+            function saveCurrentState() {
+                localStorage.setItem('currentWallpaperIndex', currentWallpaperIndex.toString());
+            }
+            
+            function initializeTimerFromStorage() {
+                const savedEndTime = localStorage.getItem('timerEndTime');
+                const savedPaused = localStorage.getItem('timerPaused');
+                const savedRemaining = localStorage.getItem('timerRemaining');
+                
+                // Load current wallpaper index
+                const savedWallpaperIndex = localStorage.getItem('currentWallpaperIndex');
+                if (savedWallpaperIndex) {
+                    currentWallpaperIndex = parseInt(savedWallpaperIndex);
+                }
+                
+                if (savedEndTime) {
+                    const now = Date.now();
+                    const endTime = parseInt(savedEndTime);
+                    
+                    if (savedPaused === 'true' && savedRemaining) {
+                        // Timer was paused
+                        remainingSeconds = parseInt(savedRemaining);
+                        isTimerPaused = true;
+                        timerEndTime = endTime;
+                        showActiveTimer();
+                        updateTimerDisplay(remainingSeconds);
+                        // Show paused state
+                        if (document.getElementById('pause-timer')) {
+                            document.getElementById('pause-timer').textContent = '▶';
+                        }
+                    } else if (endTime > now) {
+                        // Timer was running and still has time left
+                        remainingSeconds = Math.ceil((endTime - now) / 1000);
+                        timerEndTime = endTime;
+                        isTimerRunning = true;
+                        showActiveTimer();
+                        startTimerCountdown();
+                    } else {
+                        // Timer has expired
+                        clearTimerStorage();
+                    }
+                }
+            }
+            
+            function clearTimerStorage() {
+                localStorage.removeItem('timerEndTime');
+                localStorage.removeItem('timerPaused');
+                localStorage.removeItem('timerRemaining');
             }
             
             function setupEventListeners() {
@@ -1654,6 +1844,7 @@
                 });
                 
                 mobileMenuButton.addEventListener('click', toggleMobileMenu);
+                fullscreenToggle.addEventListener('click', toggleFullscreen);
                 
                 document.addEventListener('click', (e) => {
                     if (isMobileMenuOpen && 
@@ -1739,6 +1930,7 @@
                 }
                 
                 showWallpaper(currentWallpaperIndex);
+                saveCurrentState();
             }
             
             function showWallpaper(index) {
@@ -1901,25 +2093,41 @@
                     return;
                 }
                 
-                const saveData = {
-                    profile: localStorage.getItem('userProfile'),
-                    todos: localStorage.getItem('todos'),
-                    timer: {
-                        endTime: localStorage.getItem('timerEndTime'),
-                        paused: localStorage.getItem('timerPaused'),
-                        remaining: localStorage.getItem('timerRemaining')
-                    },
-                    notes: localStorage.getItem('userNotes'),
-                    theme: {
-                        color: localStorage.getItem('mainColor') || '#00ffff',
-                        glow: localStorage.getItem('glowIntensity') || '1'
-                    },
-                    timestamp: Date.now()
-                };
+                const saveData = getAllData();
                 
                 localStorage.setItem(`save_${codeWord}`, JSON.stringify(saveData));
                 document.getElementById('save-status').textContent = 'Progress saved successfully!';
                 document.getElementById('code-word-input').value = '';
+            }
+            
+            function getAllData() {
+                // Get ALL localStorage data
+                const appData = {};
+                
+                // Get known data keys
+                appData.profile = localStorage.getItem('userProfile');
+                appData.todos = localStorage.getItem('todos');
+                appData.notes = localStorage.getItem('userNotes'); // FIXED: Now includes notes
+                
+                // Get timer data
+                appData.timer = {
+                    endTime: localStorage.getItem('timerEndTime'),
+                    paused: localStorage.getItem('timerPaused'),
+                    remaining: localStorage.getItem('timerRemaining')
+                };
+                
+                appData.theme = {
+                    color: localStorage.getItem('mainColor') || '#00ffff',
+                    glow: localStorage.getItem('glowIntensity') || '1'
+                };
+                appData.currentWallpaper = currentWallpaperIndex;
+                appData.currentImageData = currentImageData;
+                appData.currentWallpaperIndex = localStorage.getItem('currentWallpaperIndex');
+                
+                appData.timestamp = Date.now();
+                appData.version = '2.1';
+                
+                return appData;
             }
             
             function loadProgress() {
@@ -1938,56 +2146,77 @@
                 try {
                     const data = JSON.parse(saveData);
                     
-                    if (data.profile) localStorage.setItem('userProfile', data.profile);
-                    if (data.todos) localStorage.setItem('todos', data.todos);
+                    if (data.profile) {
+                        localStorage.setItem('userProfile', data.profile);
+                    }
+                    if (data.todos) {
+                        localStorage.setItem('todos', data.todos);
+                    }
+                    if (data.notes) {
+                        localStorage.setItem('userNotes', data.notes); // FIXED: Now loads notes
+                    }
                     if (data.timer) {
                         if (data.timer.endTime) localStorage.setItem('timerEndTime', data.timer.endTime);
                         if (data.timer.paused) localStorage.setItem('timerPaused', data.timer.paused);
                         if (data.timer.remaining) localStorage.setItem('timerRemaining', data.timer.remaining);
                     }
-                    if (data.notes) localStorage.setItem('userNotes', data.notes);
                     if (data.theme) {
                         localStorage.setItem('mainColor', data.theme.color);
                         localStorage.setItem('glowIntensity', data.theme.glow);
                         applyTheme(data.theme.color, data.theme.glow);
                     }
+                    if (data.currentWallpaper !== undefined) {
+                        currentWallpaperIndex = data.currentWallpaper;
+                    }
+                    if (data.currentImageData) {
+                        currentImageData = data.currentImageData;
+                        localStorage.setItem('currentImageData', data.currentImageData);
+                    }
+                    if (data.currentWallpaperIndex) {
+                        localStorage.setItem('currentWallpaperIndex', data.currentWallpaperIndex);
+                    }
                     
                     document.getElementById('load-status').textContent = 'Progress loaded successfully!';
-                    location.reload();
+                    document.getElementById('load-status').style.color = 'var(--main-color)';
+                    
+                    // Reload everything
+                    loadProfile();
+                    loadTodos();
+                    loadImageFromStorage();
+                    initializeTimerFromStorage();
+                    showWallpaper(currentWallpaperIndex);
+                    
+                    setTimeout(() => {
+                        closeModal(saveLoadModal);
+                    }, 1500);
+                    
                 } catch (e) {
+                    console.error('Error loading progress:', e);
                     document.getElementById('load-status').textContent = 'Error loading progress';
+                    document.getElementById('load-status').style.color = 'red';
                 }
             }
             
             function generateExportCode() {
-                const exportData = {
-                    profile: localStorage.getItem('userProfile'),
-                    todos: localStorage.getItem('todos'),
-                    timer: {
-                        endTime: localStorage.getItem('timerEndTime'),
-                        paused: localStorage.getItem('timerPaused'),
-                        remaining: localStorage.getItem('timerRemaining')
-                    },
-                    notes: localStorage.getItem('userNotes'),
-                    theme: {
-                        color: localStorage.getItem('mainColor') || '#00ffff',
-                        glow: localStorage.getItem('glowIntensity') || '1'
-                    },
-                    timestamp: Date.now(),
-                    version: '1.0'
-                };
-                
-                const exportString = btoa(JSON.stringify(exportData));
-                document.getElementById('export-code').value = exportString;
+                const exportData = getAllData();
+                try {
+                    const exportString = btoa(JSON.stringify(exportData));
+                    document.getElementById('export-code').value = exportString;
+                } catch (e) {
+                    console.error('Error generating export code:', e);
+                    document.getElementById('export-code').value = 'Error generating export code';
+                }
             }
             
             function copyExportCode() {
                 const exportCode = document.getElementById('export-code');
                 exportCode.select();
-                document.execCommand('copy');
+                exportCode.setSelectionRange(0, 99999);
+                navigator.clipboard.writeText(exportCode.value);
                 
                 const status = document.getElementById('export-status');
                 status.textContent = 'Export code copied to clipboard!';
+                status.style.color = 'var(--main-color)';
                 setTimeout(() => {
                     status.textContent = '';
                 }, 3000);
@@ -1999,6 +2228,7 @@
                 
                 if (!email) {
                     document.getElementById('export-status').textContent = 'Please set your email in Profile Settings first';
+                    document.getElementById('export-status').style.color = 'red';
                     return;
                 }
                 
@@ -2008,12 +2238,14 @@
                 
                 window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
                 document.getElementById('export-status').textContent = 'Email opened with export code';
+                document.getElementById('export-status').style.color = 'var(--main-color)';
             }
             
             function importData() {
                 const importCode = document.getElementById('import-code').value.trim();
                 if (!importCode) {
                     document.getElementById('import-status').textContent = 'Please paste an export code';
+                    document.getElementById('import-status').style.color = 'red';
                     return;
                 }
                 
@@ -2023,27 +2255,41 @@
                     
                     // First, try to decode from base64
                     try {
-                        importData = JSON.parse(atob(importCode));
+                        const decoded = atob(importCode);
+                        importData = JSON.parse(decoded);
                     } catch (e1) {
                         // If base64 decode fails, try to parse directly as JSON
                         try {
                             importData = JSON.parse(importCode);
                         } catch (e2) {
-                            throw new Error('Invalid export code format');
+                            // Try one more time - maybe it's URL encoded
+                            try {
+                                const decoded = decodeURIComponent(importCode);
+                                importData = JSON.parse(decoded);
+                            } catch (e3) {
+                                throw new Error('Invalid export code format. Please check the code and try again.');
+                            }
                         }
                     }
                     
-                    // Store the imported data in localStorage
+                    // Verify we have the basic data structure
+                    if (!importData || typeof importData !== 'object') {
+                        throw new Error('Invalid export data structure');
+                    }
+                    
+                    // Store imported data in localStorage
                     if (importData.profile) {
                         localStorage.setItem('userProfile', importData.profile);
                     }
                     
-                    // Import todos - CRITICAL FIX: Make sure todos data is properly stored
                     if (importData.todos) {
                         localStorage.setItem('todos', importData.todos);
                     }
                     
-                    // Import timer data
+                    if (importData.notes) {
+                        localStorage.setItem('userNotes', importData.notes);
+                    }
+                    
                     if (importData.timer) {
                         if (importData.timer.endTime) {
                             localStorage.setItem('timerEndTime', importData.timer.endTime);
@@ -2056,35 +2302,47 @@
                         }
                     }
                     
-                    // Import notes
-                    if (importData.notes) {
-                        localStorage.setItem('userNotes', importData.notes);
+                    if (importData.theme) {
+                        const themeColor = importData.theme.color || '#00ffff';
+                        const themeGlow = importData.theme.glow || '1';
+                        
+                        localStorage.setItem('mainColor', themeColor);
+                        localStorage.setItem('glowIntensity', themeGlow);
+                        
+                        document.documentElement.style.setProperty('--main-color', themeColor);
+                        document.documentElement.style.setProperty('--glow-intensity', themeGlow);
                     }
                     
-                    // Import theme
-                    if (importData.theme) {
-                        localStorage.setItem('mainColor', importData.theme.color || '#00ffff');
-                        localStorage.setItem('glowIntensity', importData.theme.glow || '1');
-                        applyTheme(importData.theme.color || '#00ffff', importData.theme.glow || '1');
+                    if (importData.currentWallpaper !== undefined) {
+                        currentWallpaperIndex = importData.currentWallpaper;
+                    }
+                    
+                    if (importData.currentImageData) {
+                        currentImageData = importData.currentImageData;
+                        localStorage.setItem('currentImageData', importData.currentImageData);
+                    }
+                    
+                    if (importData.currentWallpaperIndex) {
+                        localStorage.setItem('currentWallpaperIndex', importData.currentWallpaperIndex);
                     }
                     
                     document.getElementById('import-status').textContent = 'Data imported successfully!';
                     document.getElementById('import-status').style.color = 'var(--main-color)';
                     
-                    // Load the todos immediately so they show up
+                    // Load everything
+                    loadProfile();
                     loadTodos();
+                    loadImageFromStorage();
+                    initializeTimerFromStorage();
+                    showWallpaper(currentWallpaperIndex);
                     
-                    // Close modal and refresh after delay
                     setTimeout(() => {
                         closeModal(saveLoadModal);
-                        setTimeout(() => {
-                            location.reload();
-                        }, 300);
                     }, 1500);
                     
                 } catch (e) {
                     console.error('Import error:', e);
-                    document.getElementById('import-status').textContent = 'Error importing data - invalid code format';
+                    document.getElementById('import-status').textContent = 'Error: ' + e.message;
                     document.getElementById('import-status').style.color = 'red';
                 }
             }
@@ -2128,6 +2386,12 @@
                 
                 document.documentElement.style.setProperty('--main-color', color);
                 document.documentElement.style.setProperty('--glow-intensity', glow);
+                
+                // Update the to-do input placeholder color
+                const newTaskInput = document.getElementById('new-task-input');
+                if (newTaskInput) {
+                    newTaskInput.style.setProperty('--main-color', color);
+                }
             }
             
             function setupProfileSystem() {
@@ -2137,6 +2401,8 @@
                 const saveProfileBtn = document.getElementById('save-profile');
                 const profileNameDisplay = document.getElementById('profile-name-display');
                 const profileAvatar = document.getElementById('profile-avatar');
+                const uploadAvatarBtn = document.getElementById('upload-avatar-btn');
+                const avatarFileInput = document.getElementById('avatar-file-input');
                 
                 const savedProfile = localStorage.getItem('userProfile');
                 if (savedProfile) {
@@ -2158,13 +2424,29 @@
                 });
                 
                 saveProfileBtn.addEventListener('click', saveProfile);
+                
+                uploadAvatarBtn.addEventListener('click', () => {
+                    avatarFileInput.click();
+                });
+                
+                avatarFileInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file && file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            profileAvatarUrl.value = e.target.result;
+                            updateProfileAvatar(e.target.result, profileName.value);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
             }
             
             function updateProfileAvatar(avatarUrl, name) {
                 const profileAvatar = document.getElementById('profile-avatar');
                 const profileHoverAvatar = document.getElementById('profile-hover-avatar');
                 
-                if (avatarUrl) {
+                if (avatarUrl && avatarUrl.trim() !== '') {
                     profileAvatar.style.backgroundImage = `url(${avatarUrl})`;
                     profileAvatar.style.backgroundSize = 'cover';
                     profileAvatar.textContent = '';
@@ -2229,166 +2511,192 @@
                 const pauseTimerBtn = document.getElementById('pause-timer');
                 const resetTimerBtn = document.getElementById('reset-timer');
                 
-                let countdownInterval;
                 let binaryInterval;
-                let totalSeconds = 0;
-                let remainingSeconds = 0;
-                let isTimerRunning = false;
-                let isPaused = false;
 
-                document.addEventListener('DOMContentLoaded', initializeTimer);
-                startTimerBtn.addEventListener('click', startTimer);
-                addTimeBtn.addEventListener('click', addFiveMinutes);
-                pauseTimerBtn.addEventListener('click', togglePause);
-                resetTimerBtn.addEventListener('click', resetTimer);
-                document.addEventListener('keypress', (e) => e.key === 'Enter' && startTimer());
-                document.addEventListener('keydown', (e) => e.key === 'R' && e.shiftKey && resetTimer());
+                // Prevent file manager opening on timer area
+                const timerArea = document.getElementById('timer-wallpaper');
+                timerArea.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+                
+                timerArea.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+                
+                // Prevent drag and drop from opening file manager
+                timerArea.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+                
+                timerArea.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
 
-                function initializeTimer() {
-                    const savedEndTime = localStorage.getItem('timerEndTime');
-                    const savedPaused = localStorage.getItem('timerPaused');
-                    const savedRemaining = localStorage.getItem('timerRemaining');
-                    
-                    if (savedEndTime) {
-                        const now = Date.now();
-                        const endTime = parseInt(savedEndTime);
-                        
-                        if (savedPaused === 'true' && savedRemaining) {
-                            remainingSeconds = parseInt(savedRemaining);
-                            timerPopup.style.display = 'none';
-                            activeTimer.style.display = 'block';
-                            controlButtons.style.display = 'flex';
-                            isPaused = true;
-                            pauseTimerBtn.textContent = '▶';
-                            updateTimerDisplay();
-                        } else if (endTime > now) {
-                            remainingSeconds = Math.floor((endTime - now) / 1000);
-                            timerPopup.style.display = 'none';
-                            activeTimer.style.display = 'block';
-                            controlButtons.style.display = 'flex';
-                            startCountdown();
-                        } else {
-                            localStorage.removeItem('timerEndTime');
-                            localStorage.removeItem('timerPaused');
-                            localStorage.removeItem('timerRemaining');
-                        }
+                startTimerBtn.addEventListener('click', startTimerFromButton);
+                addTimeBtn.addEventListener('click', addFiveMinutesFromButton);
+                pauseTimerBtn.addEventListener('click', togglePauseFromButton);
+                resetTimerBtn.addEventListener('click', resetTimerFromButton);
+                document.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && document.getElementById('timer-wallpaper').classList.contains('active')) {
+                        startTimerFromButton();
                     }
-                }
+                });
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'R' && e.shiftKey && document.getElementById('timer-wallpaper').classList.contains('active')) {
+                        resetTimerFromButton();
+                    }
+                });
 
-                function startTimer() {
+                function startTimerFromButton() {
                     const hours = parseInt(hoursInput.value) || 0;
                     const minutes = parseInt(minutesInput.value) || 0;
                     const seconds = parseInt(secondsInput.value) || 0;
 
-                    totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
+                    const totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
                     if (totalSeconds <= 0) return;
 
-                    const endTime = Date.now() + (totalSeconds * 1000);
-                    localStorage.setItem('timerEndTime', endTime.toString());
+                    startTimerWithSeconds(totalSeconds);
+                }
+                
+                function startTimerWithSeconds(totalSeconds) {
+                    timerEndTime = Date.now() + (totalSeconds * 1000);
+                    remainingSeconds = totalSeconds;
+                    
+                    localStorage.setItem('timerEndTime', timerEndTime.toString());
                     localStorage.setItem('timerPaused', 'false');
                     localStorage.removeItem('timerRemaining');
                     
-                    remainingSeconds = totalSeconds;
+                    showActiveTimer();
+                    isTimerRunning = true;
+                    isTimerPaused = false;
+                    
+                    startTimerCountdown();
+                    startBinaryStream();
+                }
+                
+                function showActiveTimer() {
                     timerPopup.style.display = 'none';
                     activeTimer.style.display = 'block';
                     controlButtons.style.display = 'flex';
-                    isPaused = false;
                     pauseTimerBtn.textContent = 'II';
-                    startBinaryStream();
-                    startCountdown();
-                }
-
-                function startCountdown() {
-                    if (isTimerRunning) clearInterval(countdownInterval);
-                    isTimerRunning = true;
                     
-                    countdownInterval = setInterval(() => {
-                        if (remainingSeconds > 0 && !isPaused) {
-                            remainingSeconds--;
-                            updateTimerDisplay();
-                            
-                            const endTime = Date.now() + (remainingSeconds * 1000);
-                            localStorage.setItem('timerEndTime', endTime.toString());
-                            localStorage.setItem('timerPaused', 'false');
-                            localStorage.removeItem('timerRemaining');
-                        } else if (remainingSeconds <= 0) {
-                            clearInterval(countdownInterval);
-                            isTimerRunning = false;
-                            localStorage.removeItem('timerEndTime');
-                            localStorage.removeItem('timerPaused');
-                            localStorage.removeItem('timerRemaining');
-                            resetTimer();
-                        }
-                    }, 1000);
+                    updateTimerDisplay(remainingSeconds);
                 }
-
-                function updateTimerDisplay() {
-                    const hours = Math.floor(remainingSeconds / 3600);
-                    const mins = Math.floor((remainingSeconds % 3600) / 60);
-                    const secs = remainingSeconds % 60;
+                
+                function startTimerCountdown() {
+                    if (timerInterval) {
+                        clearInterval(timerInterval);
+                    }
+                    
+                    lastUpdateTime = Date.now();
+                    timerInterval = setInterval(updateTimer, 100);
+                }
+                
+                function updateTimer() {
+                    const now = Date.now();
+                    const timePassed = now - lastUpdateTime;
+                    lastUpdateTime = now;
+                    
+                    if (!isTimerPaused) {
+                        if (timerEndTime <= now) {
+                            clearInterval(timerInterval);
+                            timerInterval = null;
+                            resetTimerFromButton();
+                        } else {
+                            remainingSeconds = Math.ceil((timerEndTime - now) / 1000);
+                            updateTimerDisplay(remainingSeconds);
+                            
+                            // Update localStorage every 5 seconds to prevent performance issues
+                            if (now % 5000 < 100) {
+                                localStorage.setItem('timerEndTime', timerEndTime.toString());
+                            }
+                        }
+                    }
+                }
+                
+                function updateTimerDisplay(seconds) {
+                    const hours = Math.floor(seconds / 3600);
+                    const mins = Math.floor((seconds % 3600) / 60);
+                    const secs = seconds % 60;
                     activeTimer.textContent = `${hours}:${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
                 }
-
-                function addFiveMinutes() {
-                    if (!isTimerRunning && remainingSeconds === 0) return;
+                
+                function addFiveMinutesFromButton() {
+                    if (!isTimerRunning) return;
                     
                     remainingSeconds += 300;
-                    updateTimerDisplay();
-                    
-                    if (!isPaused) {
-                        const endTime = Date.now() + (remainingSeconds * 1000);
-                        localStorage.setItem('timerEndTime', endTime.toString());
+                    if (!isTimerPaused) {
+                        timerEndTime = Date.now() + (remainingSeconds * 1000);
+                        localStorage.setItem('timerEndTime', timerEndTime.toString());
                     } else {
                         localStorage.setItem('timerRemaining', remainingSeconds.toString());
                     }
+                    
+                    updateTimerDisplay(remainingSeconds);
                     
                     activeTimer.style.color = 'lime';
                     setTimeout(() => {
                         activeTimer.style.color = 'var(--main-color)';
                     }, 300);
                 }
-
-                function togglePause() {
-                    if (!isTimerRunning && remainingSeconds === 0) return;
+                
+                function togglePauseFromButton() {
+                    if (!isTimerRunning) return;
                     
-                    isPaused = !isPaused;
+                    isTimerPaused = !isTimerPaused;
                     
-                    if (isPaused) {
+                    if (isTimerPaused) {
                         pauseTimerBtn.textContent = '▶';
+                        // Stop the countdown interval
+                        if (timerInterval) {
+                            clearInterval(timerInterval);
+                            timerInterval = null;
+                        }
                         localStorage.setItem('timerPaused', 'true');
                         localStorage.setItem('timerRemaining', remainingSeconds.toString());
                     } else {
                         pauseTimerBtn.textContent = 'II';
+                        // Resume timer with remaining time
+                        timerEndTime = Date.now() + (remainingSeconds * 1000);
+                        localStorage.setItem('timerEndTime', timerEndTime.toString());
                         localStorage.setItem('timerPaused', 'false');
                         localStorage.removeItem('timerRemaining');
-                        
-                        const endTime = Date.now() + (remainingSeconds * 1000);
-                        localStorage.setItem('timerEndTime', endTime.toString());
+                        startTimerCountdown();
                     }
                 }
-
-                function resetTimer() {
-                    clearInterval(countdownInterval);
+                
+                function resetTimerFromButton() {
+                    if (timerInterval) {
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                    }
+                    
                     clearInterval(binaryInterval);
                     document.querySelectorAll('.binary-stream').forEach(el => el.remove());
+                    
                     timerPopup.style.display = 'block';
                     activeTimer.style.display = 'none';
                     controlButtons.style.display = 'none';
-                    localStorage.removeItem('timerEndTime');
-                    localStorage.removeItem('timerPaused');
-                    localStorage.removeItem('timerRemaining');
+                    
+                    clearTimerStorage();
+                    
                     isTimerRunning = false;
-                    isPaused = false;
-                    pauseTimerBtn.textContent = 'II';
+                    isTimerPaused = false;
+                    remainingSeconds = 0;
                     
                     hoursInput.value = 0;
                     minutesInput.value = 25;
                     secondsInput.value = 0;
                 }
-
+                
                 function startBinaryStream() {
+                    clearInterval(binaryInterval);
                     binaryInterval = setInterval(() => {
-                        if (isPaused) return;
+                        if (isTimerPaused || !isTimerRunning) return;
                         
                         const binary = document.createElement('div');
                         binary.className = 'binary-stream';
@@ -2445,6 +2753,9 @@
                             listItem.appendChild(taskContent);
                             taskList.appendChild(listItem);
                         });
+                        
+                        // Check completion on load
+                        checkCompletion();
                     } catch (e) {
                         console.error('Error loading todos:', e);
                     }
@@ -2489,6 +2800,7 @@
                             newTaskInput.value = '';
                             newTaskInput.focus();
                         } else if (taskCount >= maxTasks) {
+                            alert('Maximum number of tasks reached (10)');
                         }
                     }
                 });
@@ -2516,11 +2828,17 @@
 
                     taskCount++;
                     saveTodos();
+                    
+                    // Check completion after adding
+                    checkCompletion();
                 }
 
                 function checkCompletion() {
                     const totalTasks = taskList.children.length;
-                    const completedTasks = Array.from(taskList.children).filter(task => task.querySelector('.checked-text')).length;
+                    const completedTasks = Array.from(taskList.children).filter(task => {
+                        const checkBox = task.querySelector('.check-box');
+                        return checkBox && checkBox.classList.contains('checked');
+                    }).length;
 
                     if (totalTasks > 0 && completedTasks === totalTasks) {
                         celebrate();
@@ -2584,11 +2902,6 @@
                     if (event.key === 'Escape') {
                         closeModal();
                     }
-                    else if (event.key === 'c' || event.key === 'C') {
-                        if (newTaskInput.value.trim() === '') {
-                            closeModal();
-                        }
-                    }
                 });
 
                 function closeModal() {
@@ -2614,14 +2927,19 @@
                             const reader = new FileReader();
                             
                             reader.onload = function(e) {
+                                const imageData = e.target.result;
+                                currentImageData = imageData;
+                                localStorage.setItem('currentImageData', imageData);
+                                
                                 container.style.display = 'none';
                                 fullscreenMode.style.display = 'block';
-                                fullscreenImage.src = e.target.result;
+                                fullscreenImage.src = imageData;
                                 fileInfo.textContent = `Loaded: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
                             };
                             
                             reader.readAsDataURL(file);
                         } else {
+                            alert('Please select a valid image file.');
                         }
                     }
                 });
@@ -2636,6 +2954,30 @@
                     container.style.display = 'block';
                     fullscreenMode.style.display = 'none';
                     fileInput.value = '';
+                }
+            }
+            
+            function loadImageFromStorage() {
+                if (currentImageData) {
+                    const container = document.querySelector('#image-wallpaper .container');
+                    const fullscreenMode = document.getElementById('fullscreenMode');
+                    const fullscreenImage = document.getElementById('fullscreenImage');
+                    
+                    container.style.display = 'none';
+                    fullscreenMode.style.display = 'block';
+                    fullscreenImage.src = currentImageData;
+                }
+            }
+            
+            function toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                    });
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
                 }
             }
             
@@ -2660,7 +3002,7 @@
                         break;
                     case 'c':
                     case 'C':
-                        if (e.ctrlKey && e.shiftKey) {
+                        if (e.shiftKey && !e.ctrlKey && !e.altKey) {
                             e.preventDefault();
                             toggleModal(themeModal);
                         }
@@ -2711,8 +3053,24 @@
                             document.getElementById('add-time').click();
                         }
                         break;
+                    case 'F11':
+                        e.preventDefault();
+                        toggleFullscreen();
+                        break;
+                    case 'f':
+                    case 'F':
+                        if (e.ctrlKey) {
+                            e.preventDefault();
+                            toggleFullscreen();
+                        }
+                        break;
                 }
             });
+            
+            // Update instructions for mobile
+            if (isMobile) {
+                instructions.textContent = "Tap top-right menu for controls | Press Alt-I for shortcuts";
+            }
         })();
     </script>
 </body>
