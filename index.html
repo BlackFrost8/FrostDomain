@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Frost Domain</title>
+    <title>Focus Domain</title>
     <style>
         :root {
             --main-color: #00ffff;
@@ -60,11 +60,13 @@
             font-size: 14px;
             color: var(--main-color);
             text-shadow: 0 0 calc(5px * var(--glow-intensity)) var(--main-color);
+            transition: opacity 2s ease-in-out;
+            pointer-events: none;
         }
         
         .instructions.fade-out {
-            opacity: 0;
-            transition: opacity 2s ease-in-out 3s;
+            opacity: 0 !important;
+            pointer-events: none;
         }
 
         .invisible-arrow {
@@ -87,13 +89,32 @@
         }
 
         .invisible-arrow.mobile-arrow {
-            opacity: 1;
-            pointer-events: auto;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            top: auto !important;
+            bottom: 30px !important;
+            transform: none !important;
+            font-size: 40px;
+            width: 60px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .invisible-arrow.mobile-arrow.visible-arrows {
+            opacity: 0.8 !important;
+            pointer-events: auto !important;
         }
 
         .invisible-arrow.desktop-arrow {
             opacity: 0;
             pointer-events: none;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            bottom: auto !important;
         }
 
         .invisible-arrow.desktop-arrow.visible {
@@ -107,6 +128,16 @@
 
         .invisible-arrow.right {
             right: 20px;
+        }
+
+        .invisible-arrow.left.mobile-arrow {
+            left: 20px !important;
+            right: auto !important;
+        }
+        
+        .invisible-arrow.right.mobile-arrow {
+            right: 20px !important;
+            left: auto !important;
         }
 
         #profile-hover {
@@ -719,6 +750,100 @@
             transform: scale(1.1);
         }
 
+        /* Timer Notification Styles */
+        .timer-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: black;
+            border: 2px solid var(--main-color);
+            border-radius: 12px;
+            padding: 30px;
+            z-index: 10000;
+            text-align: center;
+            box-shadow: 0 0 calc(30px * var(--glow-intensity)) var(--main-color);
+            animation: notification-pulse 2s infinite;
+            max-width: 90%;
+            width: 400px;
+        }
+
+        .timer-notification-icon {
+            font-size: 48px;
+            color: var(--main-color);
+            margin-bottom: 15px;
+        }
+
+        .timer-notification-title {
+            font-size: 24px;
+            color: var(--main-color);
+            margin-bottom: 10px;
+            text-shadow: 0 0 calc(10px * var(--glow-intensity)) var(--main-color);
+        }
+
+        .timer-notification-message {
+            font-size: 18px;
+            color: var(--main-color);
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .timer-notification-button {
+            background-color: black;
+            color: var(--main-color);
+            border: 1px solid var(--main-color);
+            padding: 10px 30px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Courier New', monospace;
+            margin-top: 10px;
+        }
+
+        .timer-notification-button:hover {
+            background-color: var(--main-color);
+            color: black;
+            transform: scale(1.05);
+        }
+
+        @keyframes notification-pulse {
+            0% {
+                box-shadow: 0 0 calc(20px * var(--glow-intensity)) var(--main-color);
+            }
+            50% {
+                box-shadow: 0 0 calc(40px * var(--glow-intensity)) var(--main-color);
+            }
+            100% {
+                box-shadow: 0 0 calc(20px * var(--glow-intensity)) var(--main-color);
+            }
+        }
+
+        /* Mobile adjustments for notification */
+        @media (max-width: 768px) {
+            .timer-notification {
+                width: 90%;
+                padding: 20px;
+            }
+            
+            .timer-notification-icon {
+                font-size: 36px;
+            }
+            
+            .timer-notification-title {
+                font-size: 20px;
+            }
+            
+            .timer-notification-message {
+                font-size: 16px;
+            }
+            
+            .timer-notification-button {
+                padding: 8px 20px;
+                font-size: 14px;
+            }
+        }
+
         #todo-wallpaper {
             background-color: black;
             color: var(--main-color);
@@ -1068,6 +1193,19 @@
             align-items: center;
             gap: 8px;
             font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .mobile-control-button:hover {
+            background: var(--main-color);
+            color: black;
+            transform: translateX(5px);
+        }
+
+        .mobile-control-button i {
+            font-style: normal;
+            width: 24px;
+            text-align: center;
         }
 
         .profile-upload-btn {
@@ -1130,18 +1268,33 @@
             }
             
             .invisible-arrow.mobile-arrow {
-                opacity: 0.8;
-                font-size: 30px;
-                width: 50px;
+                opacity: 0;
+                font-size: 40px;
+                width: 60px;
                 height: 80px;
+                top: auto !important;
+                bottom: 30px !important;
+                transform: none !important;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 2000;
+                pointer-events: none;
             }
             
-            .invisible-arrow.left {
-                left: 10px;
+            .invisible-arrow.mobile-arrow.visible-arrows {
+                opacity: 0.8 !important;
+                pointer-events: auto !important;
             }
             
-            .invisible-arrow.right {
-                right: 10px;
+            .invisible-arrow.left.mobile-arrow {
+                left: 20px !important;
+                right: auto !important;
+            }
+            
+            .invisible-arrow.right.mobile-arrow {
+                right: 20px !important;
+                left: auto !important;
             }
             
             #control-panel {
@@ -1176,9 +1329,18 @@
                 font-size: 14px;
             }
             
+            #todo-wallpaper {
+                padding-bottom: 80px;
+            }
+            
             #todo-wallpaper #task-list {
                 width: 90%;
                 max-height: 50vh;
+                margin-bottom: 80px;
+            }
+            
+            #todo-wallpaper #add-task {
+                margin-bottom: 80px;
             }
             
             #image-wallpaper .container {
@@ -1246,7 +1408,7 @@
     </div>
 
     <div id="control-panel">
-        <h2>Frost Domain Controls</h2>
+        <h2>Focus Domain Controls</h2>
         
         <div class="control-group">
             <h3>Navigation</h3>
@@ -1340,6 +1502,9 @@
             <button class="mobile-control-button" id="info-btn-mobile">
                 <i>ℹ️</i> Information
             </button>
+            <button class="mobile-control-button" id="exit-image-btn-mobile">
+                <i>🚪</i> Exit Fullscreen Image
+            </button>
         </div>
         
         <div class="mobile-control-group">
@@ -1374,7 +1539,6 @@
         <div id="profile-hover-name">User</div>
     </div>
 
-    <!-- Fullscreen Toggle Button -->
     <div class="fullscreen-toggle" id="fullscreen-toggle" title="Toggle Fullscreen">
         <svg viewBox="0 0 24 24">
             <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
@@ -1509,6 +1673,9 @@
                     <li>+ Button: Add 5 minutes</li>
                     <li>II Button: Pause/Resume timer</li>
                     <li>↻ Button: Reset timer</li>
+                    <li><strong>NEW:</strong> Timer completion notification with theme colors</li>
+                    <li><strong>NEW:</strong> Browser tab title flashes when timer completes</li>
+                    <li><strong>NEW:</strong> Desktop notification when timer completes (permission required)</li>
                 </ul>
                 
                 <p><strong>To-Do List:</strong></p>
@@ -1537,6 +1704,20 @@
                     <li>Export/Import for cross-device sync</li>
                     <li>Email export codes to your profile email</li>
                     <li>Automatic updates when changes occur</li>
+                </ul>
+                
+                <p><strong>Mobile Controls:</strong></p>
+                <ul>
+                    <li>Tap ☰ menu: Access all controls</li>
+                    <li>Tap bottom of screen: Show navigation arrows</li>
+                    <li>🚪 Exit Fullscreen Image: Return to image selection</li>
+                </ul>
+                
+                <p><strong>Cross-Tab Notifications:</strong></p>
+                <ul>
+                    <li>Timer completion alerts you even when in another tab</li>
+                    <li>Tab title flashes between "Timer Complete!" and "Focus Domain"</li>
+                    <li>Desktop notifications can be enabled by clicking "Allow Notifications" when prompted</li>
                 </ul>
             </div>
         </div>
@@ -1638,6 +1819,7 @@
             const timerResetBtnMobile = document.getElementById('timer-reset-btn-mobile');
             const todoAddBtnMobile = document.getElementById('todo-add-btn-mobile');
             const todoClearBtnMobile = document.getElementById('todo-clear-btn-mobile');
+            const exitImageBtnMobile = document.getElementById('exit-image-btn-mobile');
             
             const saveLoadModal = document.getElementById('save-load-modal');
             const themeModal = document.getElementById('theme-modal');
@@ -1663,7 +1845,6 @@
             let isMobileMenuOpen = false;
             let currentImageData = localStorage.getItem('currentImageData') || null;
             
-            // Timer variables
             let timerInterval = null;
             let remainingSeconds = 0;
             let isTimerRunning = false;
@@ -1671,19 +1852,44 @@
             let timerEndTime = 0;
             let lastUpdateTime = Date.now();
             
+            // Mobile arrow fade control
+            let mobileArrowTimeout;
+            let isMobileArrowsVisible = false;
+            
+            // To-Do list variables
+            let taskCount = 0;
+            let todoListInitialized = false;
+            
+            // Timer notification variables
+            let hasShownTimerNotification = false;
+            let titleFlashInterval = null;
+            let originalTitle = document.title;
+            
+            // Request notification permission on load
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+            
             document.addEventListener('DOMContentLoaded', initializeApp);
             
             function initializeApp() {
                 if (isMobile) {
                     document.body.classList.add('mobile');
-                    instructions.textContent = "Tap top-right menu for controls | Tap arrows to navigate";
+                    instructions.textContent = "Tap bottom of screen to show navigation arrows";
                     mobileMenuButton.style.display = 'flex';
                     
                     const desktopArrows = document.querySelectorAll('.desktop-arrow');
                     desktopArrows.forEach(arrow => arrow.style.display = 'none');
                     
                     const mobileArrows = document.querySelectorAll('.mobile-arrow');
-                    mobileArrows.forEach(arrow => arrow.style.display = 'flex');
+                    mobileArrows.forEach(arrow => {
+                        arrow.style.display = 'flex';
+                        arrow.classList.remove('visible-arrows');
+                        arrow.style.pointerEvents = 'none';
+                    });
+                    
+                    // Setup mobile arrow behavior at bottom
+                    setupMobileArrowBehavior();
                 } else {
                     document.body.classList.add('desktop');
                     mobileMenuButton.style.display = 'none';
@@ -1699,17 +1905,125 @@
                 setupEventListeners();
                 showWallpaper(currentWallpaperIndex);
                 
+                // FIXED: Instructions fade out after 3 seconds
                 setTimeout(() => {
                     instructions.classList.add('fade-out');
-                }, 5000);
+                }, 3000);
                 
                 loadProfile();
                 loadTodos();
                 loadImageFromStorage();
                 initializeTimerFromStorage();
                 
-                // Save wallpaper index on page unload
                 window.addEventListener('beforeunload', saveCurrentState);
+                
+                // Listen for page visibility changes to stop title flashing when user returns
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden && titleFlashInterval) {
+                        stopTitleFlash();
+                        document.title = originalTitle;
+                    }
+                });
+            }
+            
+            // Mobile arrow behavior - completely disappear and reappear only briefly at bottom
+            function setupMobileArrowBehavior() {
+                if (!isMobile) return;
+                
+                // Initially hide mobile arrows completely
+                hideMobileArrows();
+                
+                // Show arrows on touch near bottom edges
+                document.addEventListener('touchstart', handleMobileTouch);
+                document.addEventListener('touchend', handleMobileTouchEnd);
+                document.addEventListener('touchmove', handleMobileTouch);
+                
+                // Also show on mouse movement near bottom for devices with mouse support
+                document.addEventListener('mousemove', handleMobileMouseMove);
+            }
+            
+            function handleMobileTouch(e) {
+                if (!isMobile) return;
+                
+                const touch = e.touches[0] || e.changedTouches[0];
+                if (!touch) return;
+                
+                const y = touch.clientY;
+                const windowHeight = window.innerHeight;
+                const x = touch.clientX;
+                const windowWidth = window.innerWidth;
+                
+                // Show arrows if touching near bottom of screen (bottom 100px) OR near edges
+                if (y > windowHeight - 100 || x < 50 || x > windowWidth - 50) {
+                    showMobileArrowsTemporarily();
+                }
+            }
+            
+            function handleMobileTouchEnd(e) {
+                if (!isMobile) return;
+                
+                const touch = e.changedTouches[0];
+                if (!touch) return;
+                
+                const y = touch.clientY;
+                const windowHeight = window.innerHeight;
+                const x = touch.clientX;
+                const windowWidth = window.innerWidth;
+                
+                // If touch ended near bottom or edges, show arrows briefly
+                if (y > windowHeight - 100 || x < 50 || x > windowWidth - 50) {
+                    showMobileArrowsTemporarily();
+                }
+            }
+            
+            function handleMobileMouseMove(e) {
+                if (!isMobile) return;
+                
+                const y = e.clientY;
+                const windowHeight = window.innerHeight;
+                const x = e.clientX;
+                const windowWidth = window.innerWidth;
+                
+                // Show arrows if mouse is near bottom or edges
+                if (y > windowHeight - 100 || x < 50 || x > windowWidth - 50) {
+                    showMobileArrowsTemporarily();
+                }
+            }
+            
+            function showMobileArrowsTemporarily() {
+                if (!isMobile) return;
+                
+                clearTimeout(mobileArrowTimeout);
+                
+                // Show arrows with visible class
+                showMobileArrows();
+                isMobileArrowsVisible = true;
+                
+                // Hide after 2 seconds
+                mobileArrowTimeout = setTimeout(() => {
+                    hideMobileArrows();
+                    isMobileArrowsVisible = false;
+                }, 2000);
+            }
+            
+            function showMobileArrows() {
+                if (!isMobile) return;
+                
+                const mobileArrows = document.querySelectorAll('.mobile-arrow');
+                mobileArrows.forEach(arrow => {
+                    arrow.classList.add('visible-arrows');
+                    arrow.style.pointerEvents = 'auto';
+                });
+            }
+            
+            function hideMobileArrows() {
+                if (!isMobile) return;
+                
+                const mobileArrows = document.querySelectorAll('.mobile-arrow');
+                mobileArrows.forEach(arrow => {
+                    arrow.classList.remove('visible-arrows');
+                    arrow.style.pointerEvents = 'none';
+                });
             }
             
             function saveCurrentState() {
@@ -1721,7 +2035,6 @@
                 const savedPaused = localStorage.getItem('timerPaused');
                 const savedRemaining = localStorage.getItem('timerRemaining');
                 
-                // Load current wallpaper index
                 const savedWallpaperIndex = localStorage.getItem('currentWallpaperIndex');
                 if (savedWallpaperIndex) {
                     currentWallpaperIndex = parseInt(savedWallpaperIndex);
@@ -1732,25 +2045,21 @@
                     const endTime = parseInt(savedEndTime);
                     
                     if (savedPaused === 'true' && savedRemaining) {
-                        // Timer was paused
                         remainingSeconds = parseInt(savedRemaining);
                         isTimerPaused = true;
                         timerEndTime = endTime;
                         showActiveTimer();
                         updateTimerDisplay(remainingSeconds);
-                        // Show paused state
                         if (document.getElementById('pause-timer')) {
                             document.getElementById('pause-timer').textContent = '▶';
                         }
                     } else if (endTime > now) {
-                        // Timer was running and still has time left
                         remainingSeconds = Math.ceil((endTime - now) / 1000);
                         timerEndTime = endTime;
                         isTimerRunning = true;
                         showActiveTimer();
                         startTimerCountdown();
                     } else {
-                        // Timer has expired
                         clearTimerStorage();
                     }
                 }
@@ -1760,6 +2069,184 @@
                 localStorage.removeItem('timerEndTime');
                 localStorage.removeItem('timerPaused');
                 localStorage.removeItem('timerRemaining');
+            }
+            
+            // Function to flash the tab title when timer completes
+            function startTitleFlash() {
+                stopTitleFlash(); // Clear any existing interval
+                
+                let flashCount = 0;
+                titleFlashInterval = setInterval(() => {
+                    if (flashCount % 2 === 0) {
+                        document.title = '⏰ Timer Complete! ⏰';
+                    } else {
+                        document.title = originalTitle;
+                    }
+                    flashCount++;
+                    
+                    // Stop flashing after 30 seconds or when user returns to tab
+                    if (flashCount > 60) { // 30 seconds at 500ms interval
+                        stopTitleFlash();
+                        document.title = originalTitle;
+                    }
+                }, 500);
+            }
+            
+            function stopTitleFlash() {
+                if (titleFlashInterval) {
+                    clearInterval(titleFlashInterval);
+                    titleFlashInterval = null;
+                }
+            }
+            
+            // Function to show desktop notification
+            function showDesktopNotification() {
+                if (!('Notification' in window)) {
+                    console.log('This browser does not support desktop notifications');
+                    return;
+                }
+                
+                if (Notification.permission === 'granted') {
+                    const mainColor = getComputedStyle(document.documentElement).getPropertyValue('--main-color').trim();
+                    
+                    const notification = new Notification('⏰ Timer Complete!', {
+                        body: 'Your study session has ended. Great work!',
+                        icon: 'data:image/svg+xml,' + encodeURIComponent(`
+                            <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="45" fill="black" stroke="${mainColor}" stroke-width="3"/>
+                                <text x="50" y="70" font-size="40" text-anchor="middle" fill="${mainColor}">⏰</text>
+                            </svg>
+                        `),
+                        badge: 'data:image/svg+xml,' + encodeURIComponent(`
+                            <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="45" fill="black" stroke="${mainColor}" stroke-width="3"/>
+                                <text x="50" y="70" font-size="40" text-anchor="middle" fill="${mainColor}">⏰</text>
+                            </svg>
+                        `),
+                        tag: 'timer-complete',
+                        renotify: true,
+                        silent: false
+                    });
+                    
+                    notification.onclick = function() {
+                        window.focus();
+                        this.close();
+                    };
+                    
+                    // Auto-close after 10 seconds
+                    setTimeout(() => notification.close(), 10000);
+                    
+                } else if (Notification.permission !== 'denied') {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === 'granted') {
+                            showDesktopNotification();
+                        }
+                    });
+                }
+            }
+            
+            // Enhanced timer completion notification with cross-tab awareness
+            function showTimerCompletionNotification() {
+                // Prevent multiple notifications
+                if (hasShownTimerNotification) return;
+                hasShownTimerNotification = true;
+                
+                // Get current theme color
+                const mainColor = getComputedStyle(document.documentElement).getPropertyValue('--main-color').trim();
+                
+                // 1. Show in-app notification
+                showInAppNotification(mainColor);
+                
+                // 2. Flash tab title (works even in other tabs)
+                startTitleFlash();
+                
+                // 3. Show desktop notification (if permitted)
+                showDesktopNotification();
+                
+                // 4. Play a subtle sound
+                playNotificationSound();
+            }
+            
+            function showInAppNotification(mainColor) {
+                // Create notification container if it doesn't exist
+                let notificationContainer = document.getElementById('timer-notification-container');
+                if (!notificationContainer) {
+                    notificationContainer = document.createElement('div');
+                    notificationContainer.id = 'timer-notification-container';
+                    document.body.appendChild(notificationContainer);
+                }
+                
+                // Create notification element
+                const notification = document.createElement('div');
+                notification.className = 'timer-notification';
+                notification.style.setProperty('--main-color', mainColor);
+                
+                // Build notification content
+                notification.innerHTML = `
+                    <div class="timer-notification-icon">⏰</div>
+                    <div class="timer-notification-title">Timer Complete!</div>
+                    <div class="timer-notification-message">Your study session has ended</div>
+                    <button class="timer-notification-button" id="dismiss-timer-notification">Dismiss</button>
+                `;
+                
+                notificationContainer.appendChild(notification);
+                
+                // Add event listener to dismiss button
+                const dismissBtn = document.getElementById('dismiss-timer-notification');
+                dismissBtn.addEventListener('click', () => {
+                    notification.remove();
+                    hasShownTimerNotification = false;
+                    stopTitleFlash();
+                    document.title = originalTitle;
+                });
+                
+                // Auto-dismiss after 10 seconds
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                        hasShownTimerNotification = false;
+                        stopTitleFlash();
+                        document.title = originalTitle;
+                    }
+                }, 10000);
+            }
+            
+            function playNotificationSound() {
+                try {
+                    // Create a simple beep using Web Audio API
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    // Resume audio context if it's suspended (browser autoplay policy)
+                    if (audioContext.state === 'suspended') {
+                        audioContext.resume();
+                    }
+                    
+                    // Create oscillators for a more noticeable sound
+                    const oscillator1 = audioContext.createOscillator();
+                    const oscillator2 = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator1.type = 'sine';
+                    oscillator1.frequency.setValueAtTime(880, audioContext.currentTime); // A5 note
+                    
+                    oscillator2.type = 'sine';
+                    oscillator2.frequency.setValueAtTime(1108.73, audioContext.currentTime); // C#6 note
+                    
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    
+                    oscillator1.connect(gainNode);
+                    oscillator2.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator1.start();
+                    oscillator2.start();
+                    oscillator1.stop(audioContext.currentTime + 0.5);
+                    oscillator2.stop(audioContext.currentTime + 0.5);
+                } catch (e) {
+                    // Silently fail if audio is not supported
+                    console.log('Audio notification not supported');
+                }
             }
             
             function setupEventListeners() {
@@ -1799,6 +2286,12 @@
                 });
                 infoBtnMobile.addEventListener('click', () => {
                     toggleModal(infoModal);
+                    toggleMobileMenu();
+                });
+                
+                // New exit image button for mobile
+                exitImageBtnMobile.addEventListener('click', () => {
+                    exitImageFullscreen();
                     toggleMobileMenu();
                 });
                 
@@ -1861,6 +2354,51 @@
                 setupTimerWallpaper();
                 setupTodoWallpaper();
                 setupImageWallpaper();
+            }
+            
+            // New function to exit image fullscreen mode
+            function exitImageFullscreen() {
+                const container = document.querySelector('#image-wallpaper .container');
+                const fullscreenMode = document.getElementById('fullscreenMode');
+                const fileInput = document.getElementById('fileInput');
+                const fileInfo = document.getElementById('fileInfo');
+                
+                if (fullscreenMode.style.display === 'block') {
+                    container.style.display = 'block';
+                    fullscreenMode.style.display = 'none';
+                    fileInput.value = '';
+                    if (fileInfo) {
+                        fileInfo.textContent = '';
+                    }
+                    
+                    // Show a brief confirmation
+                    const instructions = document.getElementById('instructions');
+                    const originalText = instructions.textContent;
+                    instructions.textContent = '✓ Image viewer exited';
+                    instructions.style.opacity = '1';
+                    instructions.style.color = 'var(--main-color)';
+                    instructions.classList.remove('fade-out');
+                    setTimeout(() => {
+                        instructions.textContent = originalText;
+                        instructions.style.opacity = '0.7';
+                        instructions.style.color = 'var(--main-color)';
+                        instructions.classList.add('fade-out');
+                    }, 2000);
+                } else {
+                    // If not in fullscreen mode, show a message
+                    const instructions = document.getElementById('instructions');
+                    const originalText = instructions.textContent;
+                    instructions.textContent = '⚠ No image is currently open';
+                    instructions.style.opacity = '1';
+                    instructions.style.color = '#ff9900';
+                    instructions.classList.remove('fade-out');
+                    setTimeout(() => {
+                        instructions.textContent = originalText;
+                        instructions.style.opacity = '0.7';
+                        instructions.style.color = 'var(--main-color)';
+                        instructions.classList.add('fade-out');
+                    }, 2000);
+                }
             }
             
             function handleMouseMove(e) {
@@ -1965,6 +2503,7 @@
                 }, 300);
             }
             
+            // FIXED: Timer control functions that switch to timer wallpaper first
             function startTimer() {
                 if (document.getElementById('timer-wallpaper').classList.contains('active')) {
                     document.getElementById('start-timer').click();
@@ -1981,33 +2520,82 @@
             }
             
             function togglePauseTimer() {
-                if (document.getElementById('timer-wallpaper').classList.contains('active')) {
-                    document.getElementById('pause-timer').click();
+                if (!document.getElementById('timer-wallpaper').classList.contains('active')) {
+                    const timerIndex = Array.from(wallpapers).findIndex(w => w.id === 'timer-wallpaper');
+                    if (timerIndex !== -1) {
+                        currentWallpaperIndex = timerIndex;
+                        showWallpaper(currentWallpaperIndex);
+                        // Wait for timer to initialize, then pause
+                        setTimeout(() => {
+                            if (document.getElementById('pause-timer')) {
+                                document.getElementById('pause-timer').click();
+                            }
+                        }, 300);
+                    }
+                } else {
+                    if (document.getElementById('pause-timer')) {
+                        document.getElementById('pause-timer').click();
+                    }
                 }
             }
             
             function addFiveMinutes() {
-                if (document.getElementById('timer-wallpaper').classList.contains('active')) {
-                    document.getElementById('add-time').click();
+                if (!document.getElementById('timer-wallpaper').classList.contains('active')) {
+                    const timerIndex = Array.from(wallpapers).findIndex(w => w.id === 'timer-wallpaper');
+                    if (timerIndex !== -1) {
+                        currentWallpaperIndex = timerIndex;
+                        showWallpaper(currentWallpaperIndex);
+                        // Wait for timer to initialize, then add time
+                        setTimeout(() => {
+                            if (document.getElementById('add-time')) {
+                                document.getElementById('add-time').click();
+                            }
+                        }, 300);
+                    }
+                } else {
+                    if (document.getElementById('add-time')) {
+                        document.getElementById('add-time').click();
+                    }
                 }
             }
             
             function resetTimer() {
-                if (document.getElementById('timer-wallpaper').classList.contains('active')) {
-                    document.getElementById('reset-timer').click();
+                if (!document.getElementById('timer-wallpaper').classList.contains('active')) {
+                    const timerIndex = Array.from(wallpapers).findIndex(w => w.id === 'timer-wallpaper');
+                    if (timerIndex !== -1) {
+                        currentWallpaperIndex = timerIndex;
+                        showWallpaper(currentWallpaperIndex);
+                        // Wait for timer to initialize, then reset
+                        setTimeout(() => {
+                            if (document.getElementById('reset-timer')) {
+                                document.getElementById('reset-timer').click();
+                            }
+                        }, 300);
+                    }
+                } else {
+                    if (document.getElementById('reset-timer')) {
+                        document.getElementById('reset-timer').click();
+                    }
                 }
             }
             
+            // FIXED: Add task function that properly opens the modal
             function addTodo() {
+                // If not on the To-Do wallpaper, switch to it
                 if (!document.getElementById('todo-wallpaper').classList.contains('active')) {
                     const todoIndex = Array.from(wallpapers).findIndex(w => w.id === 'todo-wallpaper');
                     if (todoIndex !== -1) {
                         currentWallpaperIndex = todoIndex;
                         showWallpaper(currentWallpaperIndex);
+                        // Wait for the wallpaper to be visible, then open modal
+                        setTimeout(() => {
+                            document.getElementById('add-task').click();
+                        }, 300);
                     }
+                } else {
+                    // Already on the To-Do wallpaper, just open modal
+                    document.getElementById('add-task').click();
                 }
-                
-                document.getElementById('new-task-input').focus();
             }
             
             function clearCompletedTodos() {
@@ -2019,7 +2607,62 @@
                         task.remove();
                     }
                 });
+                
+                // Update task count and save
+                taskCount = taskList.children.length;
                 saveTodos();
+                
+                // Reset the UI to normal state
+                resetTodoUI();
+            }
+            
+            function resetTodoUI() {
+                const taskList = document.getElementById('task-list');
+                const addTaskButton = document.getElementById('add-task');
+                
+                // Reset opacity to normal
+                taskList.style.opacity = '1';
+                addTaskButton.style.opacity = '1';
+                
+                // Reset any celebrations
+                document.querySelectorAll('.celebration, .confetti').forEach(el => el.remove());
+            }
+            
+            // Encryption functions for export/import
+            function encryptData(data, key) {
+                try {
+                    // Simple XOR encryption
+                    let encrypted = '';
+                    const stringData = JSON.stringify(data);
+                    for (let i = 0; i < stringData.length; i++) {
+                        const charCode = stringData.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+                        encrypted += String.fromCharCode(charCode);
+                    }
+                    return btoa(encrypted);
+                } catch (e) {
+                    console.error('Encryption error:', e);
+                    return btoa(JSON.stringify(data)); // Fallback to plain base64
+                }
+            }
+            
+            function decryptData(encryptedData, key) {
+                try {
+                    const decoded = atob(encryptedData);
+                    let decrypted = '';
+                    for (let i = 0; i < decoded.length; i++) {
+                        const charCode = decoded.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+                        decrypted += String.fromCharCode(charCode);
+                    }
+                    return JSON.parse(decrypted);
+                } catch (e) {
+                    console.error('Decryption error:', e);
+                    // Try to parse as plain data
+                    try {
+                        return JSON.parse(atob(encryptedData));
+                    } catch (e2) {
+                        return JSON.parse(encryptedData);
+                    }
+                }
             }
             
             function setupSaveLoadSystem() {
@@ -2063,7 +2706,7 @@
                         tab.addEventListener('click', () => {
                             document.querySelectorAll('.export-import-tab').forEach(t => t.classList.remove('active'));
                             tab.classList.add('active');
-                            
+                
                             exportSection.style.display = 'none';
                             importSection.style.display = 'none';
                             
@@ -2101,15 +2744,12 @@
             }
             
             function getAllData() {
-                // Get ALL localStorage data
                 const appData = {};
                 
-                // Get known data keys
                 appData.profile = localStorage.getItem('userProfile');
                 appData.todos = localStorage.getItem('todos');
-                appData.notes = localStorage.getItem('userNotes'); // FIXED: Now includes notes
+                appData.notes = localStorage.getItem('userNotes');
                 
-                // Get timer data
                 appData.timer = {
                     endTime: localStorage.getItem('timerEndTime'),
                     paused: localStorage.getItem('timerPaused'),
@@ -2153,7 +2793,7 @@
                         localStorage.setItem('todos', data.todos);
                     }
                     if (data.notes) {
-                        localStorage.setItem('userNotes', data.notes); // FIXED: Now loads notes
+                        localStorage.setItem('userNotes', data.notes);
                     }
                     if (data.timer) {
                         if (data.timer.endTime) localStorage.setItem('timerEndTime', data.timer.endTime);
@@ -2179,7 +2819,6 @@
                     document.getElementById('load-status').textContent = 'Progress loaded successfully!';
                     document.getElementById('load-status').style.color = 'var(--main-color)';
                     
-                    // Reload everything
                     loadProfile();
                     loadTodos();
                     loadImageFromStorage();
@@ -2200,11 +2839,16 @@
             function generateExportCode() {
                 const exportData = getAllData();
                 try {
-                    const exportString = btoa(JSON.stringify(exportData));
+                    // Use user's name or a default key for encryption
+                    const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+                    const encryptionKey = profile.name || 'FocusDomain2024!';
+                    
+                    const exportString = encryptData(exportData, encryptionKey);
                     document.getElementById('export-code').value = exportString;
                 } catch (e) {
                     console.error('Error generating export code:', e);
-                    document.getElementById('export-code').value = 'Error generating export code';
+                    // Fallback to plain base64
+                    document.getElementById('export-code').value = btoa(JSON.stringify(exportData));
                 }
             }
             
@@ -2233,8 +2877,8 @@
                 }
                 
                 const exportCode = document.getElementById('export-code').value;
-                const subject = 'Frost Domain Export Code';
-                const body = `Here is your Frost Domain export code:\n\n${exportCode}\n\nUse this code to import your data on another device.`;
+                const subject = 'Focus Domain Export Code';
+                const body = `Here is your Focus Domain export code:\n\n${exportCode}\n\nUse this code to import your data on another device.`;
                 
                 window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
                 document.getElementById('export-status').textContent = 'Email opened with export code';
@@ -2250,34 +2894,39 @@
                 }
                 
                 try {
-                    // Try to parse the import code
                     let importData;
                     
-                    // First, try to decode from base64
+                    // Get encryption key from user profile
+                    const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+                    const encryptionKey = profile.name || 'FocusDomain2024!';
+                    
                     try {
-                        const decoded = atob(importCode);
-                        importData = JSON.parse(decoded);
+                        // First try to decrypt with encryption
+                        importData = decryptData(importCode, encryptionKey);
                     } catch (e1) {
-                        // If base64 decode fails, try to parse directly as JSON
+                        // If that fails, try plain base64
                         try {
-                            importData = JSON.parse(importCode);
+                            const decoded = atob(importCode);
+                            importData = JSON.parse(decoded);
                         } catch (e2) {
-                            // Try one more time - maybe it's URL encoded
+                            // Try plain JSON
                             try {
-                                const decoded = decodeURIComponent(importCode);
-                                importData = JSON.parse(decoded);
+                                importData = JSON.parse(importCode);
                             } catch (e3) {
-                                throw new Error('Invalid export code format. Please check the code and try again.');
+                                try {
+                                    const decoded = decodeURIComponent(importCode);
+                                    importData = JSON.parse(decoded);
+                                } catch (e4) {
+                                    throw new Error('Invalid export code format. Please check the code and try again.');
+                                }
                             }
                         }
                     }
                     
-                    // Verify we have the basic data structure
                     if (!importData || typeof importData !== 'object') {
                         throw new Error('Invalid export data structure');
                     }
                     
-                    // Store imported data in localStorage
                     if (importData.profile) {
                         localStorage.setItem('userProfile', importData.profile);
                     }
@@ -2329,7 +2978,6 @@
                     document.getElementById('import-status').textContent = 'Data imported successfully!';
                     document.getElementById('import-status').style.color = 'var(--main-color)';
                     
-                    // Load everything
                     loadProfile();
                     loadTodos();
                     loadImageFromStorage();
@@ -2387,7 +3035,6 @@
                 document.documentElement.style.setProperty('--main-color', color);
                 document.documentElement.style.setProperty('--glow-intensity', glow);
                 
-                // Update the to-do input placeholder color
                 const newTaskInput = document.getElementById('new-task-input');
                 if (newTaskInput) {
                     newTaskInput.style.setProperty('--main-color', color);
@@ -2513,7 +3160,6 @@
                 
                 let binaryInterval;
 
-                // Prevent file manager opening on timer area
                 const timerArea = document.getElementById('timer-wallpaper');
                 timerArea.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -2525,7 +3171,6 @@
                     e.stopPropagation();
                 });
                 
-                // Prevent drag and drop from opening file manager
                 timerArea.addEventListener('dragover', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -2560,6 +3205,11 @@
                     if (totalSeconds <= 0) return;
 
                     startTimerWithSeconds(totalSeconds);
+                    
+                    // Reset notification flag when starting new timer
+                    hasShownTimerNotification = false;
+                    stopTitleFlash();
+                    document.title = originalTitle;
                 }
                 
                 function startTimerWithSeconds(totalSeconds) {
@@ -2576,6 +3226,11 @@
                     
                     startTimerCountdown();
                     startBinaryStream();
+                    
+                    // Reset notification flag
+                    hasShownTimerNotification = false;
+                    stopTitleFlash();
+                    document.title = originalTitle;
                 }
                 
                 function showActiveTimer() {
@@ -2605,12 +3260,15 @@
                         if (timerEndTime <= now) {
                             clearInterval(timerInterval);
                             timerInterval = null;
+                            
+                            // Show notification when timer completes
+                            showTimerCompletionNotification();
+                            
                             resetTimerFromButton();
                         } else {
                             remainingSeconds = Math.ceil((timerEndTime - now) / 1000);
                             updateTimerDisplay(remainingSeconds);
                             
-                            // Update localStorage every 5 seconds to prevent performance issues
                             if (now % 5000 < 100) {
                                 localStorage.setItem('timerEndTime', timerEndTime.toString());
                             }
@@ -2651,7 +3309,6 @@
                     
                     if (isTimerPaused) {
                         pauseTimerBtn.textContent = '▶';
-                        // Stop the countdown interval
                         if (timerInterval) {
                             clearInterval(timerInterval);
                             timerInterval = null;
@@ -2660,7 +3317,6 @@
                         localStorage.setItem('timerRemaining', remainingSeconds.toString());
                     } else {
                         pauseTimerBtn.textContent = 'II';
-                        // Resume timer with remaining time
                         timerEndTime = Date.now() + (remainingSeconds * 1000);
                         localStorage.setItem('timerEndTime', timerEndTime.toString());
                         localStorage.setItem('timerPaused', 'false');
@@ -2687,6 +3343,9 @@
                     isTimerRunning = false;
                     isTimerPaused = false;
                     remainingSeconds = 0;
+                    hasShownTimerNotification = false;
+                    stopTitleFlash();
+                    document.title = originalTitle;
                     
                     hoursInput.value = 0;
                     minutesInput.value = 25;
@@ -2724,6 +3383,7 @@
                     try {
                         const todos = JSON.parse(savedTodos);
                         taskList.innerHTML = '';
+                        taskCount = 0;
                         
                         todos.forEach(todo => {
                             const listItem = document.createElement('li');
@@ -2752,10 +3412,11 @@
                             listItem.appendChild(checkBox);
                             listItem.appendChild(taskContent);
                             taskList.appendChild(listItem);
+                            taskCount++;
                         });
                         
-                        // Check completion on load
                         checkCompletion();
+                        todoListInitialized = true;
                     } catch (e) {
                         console.error('Error loading todos:', e);
                     }
@@ -2775,13 +3436,87 @@
                 localStorage.setItem('todos', JSON.stringify(todos));
             }
             
+            function checkCompletion() {
+                const taskList = document.getElementById('task-list');
+                if (!taskList) return;
+                
+                const totalTasks = taskList.children.length;
+                if (totalTasks === 0) return;
+                
+                const completedTasks = Array.from(taskList.children).filter(task => {
+                    const checkBox = task.querySelector('.check-box');
+                    return checkBox && checkBox.classList.contains('checked');
+                }).length;
+
+                if (completedTasks === totalTasks && totalTasks > 0) {
+                    celebrate();
+                }
+            }
+            
+            function celebrate() {
+                const celebrationText = document.createElement('div');
+                celebrationText.className = 'celebration';
+                celebrationText.innerText = '❄️ All tasks completed ❄️';
+                document.getElementById('todo-wallpaper').appendChild(celebrationText);
+
+                for (let i = 0; i < 50; i++) {
+                    createConfetti();
+                }
+
+                setTimeout(() => {
+                    celebrationText.remove();
+                    fadeOutTasks();
+                }, 3000);
+            }
+            
+            function fadeOutTasks() {
+                const taskList = document.getElementById('task-list');
+                const addTaskButton = document.getElementById('add-task');
+                
+                if (!taskList || !addTaskButton) return;
+                
+                // Fade out
+                taskList.style.opacity = 0;
+                addTaskButton.style.opacity = 0;
+
+                // Wait for fade out, then clear and reset
+                setTimeout(() => {
+                    taskList.innerHTML = '';
+                    taskCount = 0;
+                    
+                    // Reset to normal state
+                    setTimeout(() => {
+                        taskList.style.opacity = 1;
+                        addTaskButton.style.opacity = 1;
+                        saveTodos();
+                    }, 300);
+                }, 1000);
+            }
+            
+            function createConfetti() {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = getRandomColor();
+
+                document.getElementById('todo-wallpaper').appendChild(confetti);
+
+                setTimeout(() => {
+                    confetti.remove();
+                }, 1500);
+            }
+            
+            function getRandomColor() {
+                const colors = ['var(--main-color)', '#00ffff', '#00ccff', '#0099ff', '#ff00ff', '#ffff00'];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+            
             function setupTodoWallpaper() {
                 const addTaskButton = document.getElementById('add-task');
                 const modal = document.getElementById('modal');
                 const newTaskInput = document.getElementById('new-task-input');
                 const taskList = document.getElementById('task-list');
                 const maxTasks = 10;
-                let taskCount = taskList.children.length;
 
                 function openModal() {
                     modal.classList.add('visible');
@@ -2829,67 +3564,7 @@
                     taskCount++;
                     saveTodos();
                     
-                    // Check completion after adding
                     checkCompletion();
-                }
-
-                function checkCompletion() {
-                    const totalTasks = taskList.children.length;
-                    const completedTasks = Array.from(taskList.children).filter(task => {
-                        const checkBox = task.querySelector('.check-box');
-                        return checkBox && checkBox.classList.contains('checked');
-                    }).length;
-
-                    if (totalTasks > 0 && completedTasks === totalTasks) {
-                        celebrate();
-                    }
-                }
-
-                function celebrate() {
-                    const celebrationText = document.createElement('div');
-                    celebrationText.className = 'celebration';
-                    celebrationText.innerText = '❄️ All tasks completed ❄️';
-                    document.getElementById('todo-wallpaper').appendChild(celebrationText);
-
-                    for (let i = 0; i < 50; i++) {
-                        createConfetti();
-                    }
-
-                    setTimeout(() => {
-                        celebrationText.remove();
-                        fadeOutTasks();
-                    }, 3000);
-                }
-
-                function fadeOutTasks() {
-                    taskList.style.opacity = 0;
-                    addTaskButton.style.opacity = 0;
-
-                    setTimeout(() => {
-                        taskList.innerHTML = '';
-                        taskCount = 0;
-                        taskList.style.opacity = 1;
-                        addTaskButton.style.opacity = 1;
-                        saveTodos();
-                    }, 1000);
-                }
-
-                function createConfetti() {
-                    const confetti = document.createElement('div');
-                    confetti.className = 'confetti';
-                    confetti.style.left = Math.random() * 100 + 'vw';
-                    confetti.style.backgroundColor = getRandomColor();
-
-                    document.getElementById('todo-wallpaper').appendChild(confetti);
-
-                    setTimeout(() => {
-                        confetti.remove();
-                    }, 1500);
-                }
-
-                function getRandomColor() {
-                    const colors = ['var(--main-color)', 'lightblue', 'blue', 'magenta', 'yellow'];
-                    return colors[Math.floor(Math.random() * colors.length)];
                 }
 
                 window.addEventListener('click', function (event) {
@@ -2909,8 +3584,10 @@
                     modal.style.display = 'none';
                 }
                 
-                // Initialize with saved todos
-                loadTodos();
+                // Initialize the todo list
+                if (!todoListInitialized) {
+                    loadTodos();
+                }
             }
             
             function setupImageWallpaper() {
@@ -2982,6 +3659,13 @@
             }
             
             document.addEventListener('keydown', (e) => {
+                const todoModal = document.getElementById('modal');
+                const isTodoModalOpen = todoModal.classList.contains('visible');
+                
+                if (isTodoModalOpen && document.activeElement === document.getElementById('new-task-input')) {
+                    return;
+                }
+                
                 if (document.querySelector('.modal.visible')) return;
                 
                 switch(e.key) {
@@ -3067,9 +3751,8 @@
                 }
             });
             
-            // Update instructions for mobile
             if (isMobile) {
-                instructions.textContent = "Tap top-right menu for controls | Press Alt-I for shortcuts";
+                instructions.textContent = "Tap bottom of screen to show navigation arrows";
             }
         })();
     </script>
