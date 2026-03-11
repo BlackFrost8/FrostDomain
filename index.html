@@ -592,10 +592,6 @@
             border-radius: 4px;
         }
 
-        #info-modal-content::-webkit-scrollbar-thumb:hover {
-            background: #00cccc;
-        }
-
         #timer-wallpaper {
             background-color: black;
             color: var(--main-color);
@@ -609,9 +605,6 @@
             overflow: hidden;
             -webkit-touch-callout: none;
             -webkit-user-select: none;
-            -khtml-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
             user-select: none;
         }
 
@@ -750,7 +743,6 @@
             transform: scale(1.1);
         }
 
-        /* Timer Notification Styles */
         .timer-notification {
             position: fixed;
             top: 50%;
@@ -819,25 +811,20 @@
             }
         }
 
-        /* Mobile adjustments for notification */
         @media (max-width: 768px) {
             .timer-notification {
                 width: 90%;
                 padding: 20px;
             }
-            
             .timer-notification-icon {
                 font-size: 36px;
             }
-            
             .timer-notification-title {
                 font-size: 20px;
             }
-            
             .timer-notification-message {
                 font-size: 16px;
             }
-            
             .timer-notification-button {
                 padding: 8px 20px;
                 font-size: 14px;
@@ -1673,9 +1660,9 @@
                     <li>+ Button: Add 5 minutes</li>
                     <li>II Button: Pause/Resume timer</li>
                     <li>↻ Button: Reset timer</li>
-                    <li><strong>NEW:</strong> Timer completion notification with theme colors</li>
-                    <li><strong>NEW:</strong> Browser tab title flashes when timer completes</li>
-                    <li><strong>NEW:</strong> Desktop notification when timer completes (permission required)</li>
+                    <li>Timer completion notification with theme colors</li>
+                    <li>Browser tab title flashes when timer completes</li>
+                    <li>Desktop notification when timer completes</li>
                 </ul>
                 
                 <p><strong>To-Do List:</strong></p>
@@ -1717,7 +1704,7 @@
                 <ul>
                     <li>Timer completion alerts you even when in another tab</li>
                     <li>Tab title flashes between "Timer Complete!" and "Focus Domain"</li>
-                    <li>Desktop notifications can be enabled by clicking "Allow Notifications" when prompted</li>
+                    <li>Desktop notifications can be enabled</li>
                 </ul>
             </div>
         </div>
@@ -1852,20 +1839,16 @@
             let timerEndTime = 0;
             let lastUpdateTime = Date.now();
             
-            // Mobile arrow fade control
             let mobileArrowTimeout;
             let isMobileArrowsVisible = false;
             
-            // To-Do list variables
             let taskCount = 0;
             let todoListInitialized = false;
             
-            // Timer notification variables
             let hasShownTimerNotification = false;
             let titleFlashInterval = null;
             let originalTitle = document.title;
             
-            // Request notification permission on load
             if ('Notification' in window && Notification.permission === 'default') {
                 Notification.requestPermission();
             }
@@ -1888,7 +1871,6 @@
                         arrow.style.pointerEvents = 'none';
                     });
                     
-                    // Setup mobile arrow behavior at bottom
                     setupMobileArrowBehavior();
                 } else {
                     document.body.classList.add('desktop');
@@ -1905,7 +1887,6 @@
                 setupEventListeners();
                 showWallpaper(currentWallpaperIndex);
                 
-                // FIXED: Instructions fade out after 3 seconds
                 setTimeout(() => {
                     instructions.classList.add('fade-out');
                 }, 3000);
@@ -1917,7 +1898,6 @@
                 
                 window.addEventListener('beforeunload', saveCurrentState);
                 
-                // Listen for page visibility changes to stop title flashing when user returns
                 document.addEventListener('visibilitychange', () => {
                     if (!document.hidden && titleFlashInterval) {
                         stopTitleFlash();
@@ -1926,19 +1906,14 @@
                 });
             }
             
-            // Mobile arrow behavior - completely disappear and reappear only briefly at bottom
             function setupMobileArrowBehavior() {
                 if (!isMobile) return;
                 
-                // Initially hide mobile arrows completely
                 hideMobileArrows();
                 
-                // Show arrows on touch near bottom edges
                 document.addEventListener('touchstart', handleMobileTouch);
                 document.addEventListener('touchend', handleMobileTouchEnd);
                 document.addEventListener('touchmove', handleMobileTouch);
-                
-                // Also show on mouse movement near bottom for devices with mouse support
                 document.addEventListener('mousemove', handleMobileMouseMove);
             }
             
@@ -1953,7 +1928,6 @@
                 const x = touch.clientX;
                 const windowWidth = window.innerWidth;
                 
-                // Show arrows if touching near bottom of screen (bottom 100px) OR near edges
                 if (y > windowHeight - 100 || x < 50 || x > windowWidth - 50) {
                     showMobileArrowsTemporarily();
                 }
@@ -1970,7 +1944,6 @@
                 const x = touch.clientX;
                 const windowWidth = window.innerWidth;
                 
-                // If touch ended near bottom or edges, show arrows briefly
                 if (y > windowHeight - 100 || x < 50 || x > windowWidth - 50) {
                     showMobileArrowsTemporarily();
                 }
@@ -1984,7 +1957,6 @@
                 const x = e.clientX;
                 const windowWidth = window.innerWidth;
                 
-                // Show arrows if mouse is near bottom or edges
                 if (y > windowHeight - 100 || x < 50 || x > windowWidth - 50) {
                     showMobileArrowsTemporarily();
                 }
@@ -1995,11 +1967,9 @@
                 
                 clearTimeout(mobileArrowTimeout);
                 
-                // Show arrows with visible class
                 showMobileArrows();
                 isMobileArrowsVisible = true;
                 
-                // Hide after 2 seconds
                 mobileArrowTimeout = setTimeout(() => {
                     hideMobileArrows();
                     isMobileArrowsVisible = false;
@@ -2071,9 +2041,8 @@
                 localStorage.removeItem('timerRemaining');
             }
             
-            // Function to flash the tab title when timer completes
             function startTitleFlash() {
-                stopTitleFlash(); // Clear any existing interval
+                stopTitleFlash();
                 
                 let flashCount = 0;
                 titleFlashInterval = setInterval(() => {
@@ -2084,8 +2053,7 @@
                     }
                     flashCount++;
                     
-                    // Stop flashing after 30 seconds or when user returns to tab
-                    if (flashCount > 60) { // 30 seconds at 500ms interval
+                    if (flashCount > 60) {
                         stopTitleFlash();
                         document.title = originalTitle;
                     }
@@ -2099,10 +2067,8 @@
                 }
             }
             
-            // Function to show desktop notification
             function showDesktopNotification() {
                 if (!('Notification' in window)) {
-                    console.log('This browser does not support desktop notifications');
                     return;
                 }
                 
@@ -2117,15 +2083,7 @@
                                 <text x="50" y="70" font-size="40" text-anchor="middle" fill="${mainColor}">⏰</text>
                             </svg>
                         `),
-                        badge: 'data:image/svg+xml,' + encodeURIComponent(`
-                            <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
-                                <circle cx="50" cy="50" r="45" fill="black" stroke="${mainColor}" stroke-width="3"/>
-                                <text x="50" y="70" font-size="40" text-anchor="middle" fill="${mainColor}">⏰</text>
-                            </svg>
-                        `),
-                        tag: 'timer-complete',
-                        renotify: true,
-                        silent: false
+                        tag: 'timer-complete'
                     });
                     
                     notification.onclick = function() {
@@ -2133,7 +2091,6 @@
                         this.close();
                     };
                     
-                    // Auto-close after 10 seconds
                     setTimeout(() => notification.close(), 10000);
                     
                 } else if (Notification.permission !== 'denied') {
@@ -2145,30 +2102,19 @@
                 }
             }
             
-            // Enhanced timer completion notification with cross-tab awareness
             function showTimerCompletionNotification() {
-                // Prevent multiple notifications
                 if (hasShownTimerNotification) return;
                 hasShownTimerNotification = true;
                 
-                // Get current theme color
                 const mainColor = getComputedStyle(document.documentElement).getPropertyValue('--main-color').trim();
                 
-                // 1. Show in-app notification
                 showInAppNotification(mainColor);
-                
-                // 2. Flash tab title (works even in other tabs)
                 startTitleFlash();
-                
-                // 3. Show desktop notification (if permitted)
                 showDesktopNotification();
-                
-                // 4. Play a subtle sound
                 playNotificationSound();
             }
             
             function showInAppNotification(mainColor) {
-                // Create notification container if it doesn't exist
                 let notificationContainer = document.getElementById('timer-notification-container');
                 if (!notificationContainer) {
                     notificationContainer = document.createElement('div');
@@ -2176,12 +2122,10 @@
                     document.body.appendChild(notificationContainer);
                 }
                 
-                // Create notification element
                 const notification = document.createElement('div');
                 notification.className = 'timer-notification';
                 notification.style.setProperty('--main-color', mainColor);
                 
-                // Build notification content
                 notification.innerHTML = `
                     <div class="timer-notification-icon">⏰</div>
                     <div class="timer-notification-title">Timer Complete!</div>
@@ -2191,7 +2135,6 @@
                 
                 notificationContainer.appendChild(notification);
                 
-                // Add event listener to dismiss button
                 const dismissBtn = document.getElementById('dismiss-timer-notification');
                 dismissBtn.addEventListener('click', () => {
                     notification.remove();
@@ -2200,7 +2143,6 @@
                     document.title = originalTitle;
                 });
                 
-                // Auto-dismiss after 10 seconds
                 setTimeout(() => {
                     if (notification.parentNode) {
                         notification.remove();
@@ -2213,24 +2155,21 @@
             
             function playNotificationSound() {
                 try {
-                    // Create a simple beep using Web Audio API
                     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                     
-                    // Resume audio context if it's suspended (browser autoplay policy)
                     if (audioContext.state === 'suspended') {
                         audioContext.resume();
                     }
                     
-                    // Create oscillators for a more noticeable sound
                     const oscillator1 = audioContext.createOscillator();
                     const oscillator2 = audioContext.createOscillator();
                     const gainNode = audioContext.createGain();
                     
                     oscillator1.type = 'sine';
-                    oscillator1.frequency.setValueAtTime(880, audioContext.currentTime); // A5 note
+                    oscillator1.frequency.setValueAtTime(880, audioContext.currentTime);
                     
                     oscillator2.type = 'sine';
-                    oscillator2.frequency.setValueAtTime(1108.73, audioContext.currentTime); // C#6 note
+                    oscillator2.frequency.setValueAtTime(1108.73, audioContext.currentTime);
                     
                     gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
                     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
@@ -2243,10 +2182,7 @@
                     oscillator2.start();
                     oscillator1.stop(audioContext.currentTime + 0.5);
                     oscillator2.stop(audioContext.currentTime + 0.5);
-                } catch (e) {
-                    // Silently fail if audio is not supported
-                    console.log('Audio notification not supported');
-                }
+                } catch (e) {}
             }
             
             function setupEventListeners() {
@@ -2289,7 +2225,6 @@
                     toggleMobileMenu();
                 });
                 
-                // New exit image button for mobile
                 exitImageBtnMobile.addEventListener('click', () => {
                     exitImageFullscreen();
                     toggleMobileMenu();
@@ -2356,7 +2291,6 @@
                 setupImageWallpaper();
             }
             
-            // New function to exit image fullscreen mode
             function exitImageFullscreen() {
                 const container = document.querySelector('#image-wallpaper .container');
                 const fullscreenMode = document.getElementById('fullscreenMode');
@@ -2371,7 +2305,6 @@
                         fileInfo.textContent = '';
                     }
                     
-                    // Show a brief confirmation
                     const instructions = document.getElementById('instructions');
                     const originalText = instructions.textContent;
                     instructions.textContent = '✓ Image viewer exited';
@@ -2385,7 +2318,6 @@
                         instructions.classList.add('fade-out');
                     }, 2000);
                 } else {
-                    // If not in fullscreen mode, show a message
                     const instructions = document.getElementById('instructions');
                     const originalText = instructions.textContent;
                     instructions.textContent = '⚠ No image is currently open';
@@ -2503,7 +2435,6 @@
                 }, 300);
             }
             
-            // FIXED: Timer control functions that switch to timer wallpaper first
             function startTimer() {
                 if (document.getElementById('timer-wallpaper').classList.contains('active')) {
                     document.getElementById('start-timer').click();
@@ -2525,7 +2456,6 @@
                     if (timerIndex !== -1) {
                         currentWallpaperIndex = timerIndex;
                         showWallpaper(currentWallpaperIndex);
-                        // Wait for timer to initialize, then pause
                         setTimeout(() => {
                             if (document.getElementById('pause-timer')) {
                                 document.getElementById('pause-timer').click();
@@ -2545,7 +2475,6 @@
                     if (timerIndex !== -1) {
                         currentWallpaperIndex = timerIndex;
                         showWallpaper(currentWallpaperIndex);
-                        // Wait for timer to initialize, then add time
                         setTimeout(() => {
                             if (document.getElementById('add-time')) {
                                 document.getElementById('add-time').click();
@@ -2565,7 +2494,6 @@
                     if (timerIndex !== -1) {
                         currentWallpaperIndex = timerIndex;
                         showWallpaper(currentWallpaperIndex);
-                        // Wait for timer to initialize, then reset
                         setTimeout(() => {
                             if (document.getElementById('reset-timer')) {
                                 document.getElementById('reset-timer').click();
@@ -2579,21 +2507,17 @@
                 }
             }
             
-            // FIXED: Add task function that properly opens the modal
             function addTodo() {
-                // If not on the To-Do wallpaper, switch to it
                 if (!document.getElementById('todo-wallpaper').classList.contains('active')) {
                     const todoIndex = Array.from(wallpapers).findIndex(w => w.id === 'todo-wallpaper');
                     if (todoIndex !== -1) {
                         currentWallpaperIndex = todoIndex;
                         showWallpaper(currentWallpaperIndex);
-                        // Wait for the wallpaper to be visible, then open modal
                         setTimeout(() => {
                             document.getElementById('add-task').click();
                         }, 300);
                     }
                 } else {
-                    // Already on the To-Do wallpaper, just open modal
                     document.getElementById('add-task').click();
                 }
             }
@@ -2608,11 +2532,9 @@
                     }
                 });
                 
-                // Update task count and save
                 taskCount = taskList.children.length;
                 saveTodos();
                 
-                // Reset the UI to normal state
                 resetTodoUI();
             }
             
@@ -2620,18 +2542,14 @@
                 const taskList = document.getElementById('task-list');
                 const addTaskButton = document.getElementById('add-task');
                 
-                // Reset opacity to normal
                 taskList.style.opacity = '1';
                 addTaskButton.style.opacity = '1';
                 
-                // Reset any celebrations
                 document.querySelectorAll('.celebration, .confetti').forEach(el => el.remove());
             }
             
-            // Encryption functions for export/import
             function encryptData(data, key) {
                 try {
-                    // Simple XOR encryption
                     let encrypted = '';
                     const stringData = JSON.stringify(data);
                     for (let i = 0; i < stringData.length; i++) {
@@ -2640,8 +2558,7 @@
                     }
                     return btoa(encrypted);
                 } catch (e) {
-                    console.error('Encryption error:', e);
-                    return btoa(JSON.stringify(data)); // Fallback to plain base64
+                    return btoa(JSON.stringify(data));
                 }
             }
             
@@ -2655,8 +2572,6 @@
                     }
                     return JSON.parse(decrypted);
                 } catch (e) {
-                    console.error('Decryption error:', e);
-                    // Try to parse as plain data
                     try {
                         return JSON.parse(atob(encryptedData));
                     } catch (e2) {
@@ -2830,7 +2745,6 @@
                     }, 1500);
                     
                 } catch (e) {
-                    console.error('Error loading progress:', e);
                     document.getElementById('load-status').textContent = 'Error loading progress';
                     document.getElementById('load-status').style.color = 'red';
                 }
@@ -2839,15 +2753,12 @@
             function generateExportCode() {
                 const exportData = getAllData();
                 try {
-                    // Use user's name or a default key for encryption
                     const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
                     const encryptionKey = profile.name || 'FocusDomain2024!';
                     
                     const exportString = encryptData(exportData, encryptionKey);
                     document.getElementById('export-code').value = exportString;
                 } catch (e) {
-                    console.error('Error generating export code:', e);
-                    // Fallback to plain base64
                     document.getElementById('export-code').value = btoa(JSON.stringify(exportData));
                 }
             }
@@ -2895,36 +2806,35 @@
                 
                 try {
                     let importData;
+                    let decryptionSuccess = false;
                     
-                    // Get encryption key from user profile
                     const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
                     const encryptionKey = profile.name || 'FocusDomain2024!';
                     
                     try {
-                        // First try to decrypt with encryption
                         importData = decryptData(importCode, encryptionKey);
+                        decryptionSuccess = true;
                     } catch (e1) {
-                        // If that fails, try plain base64
                         try {
                             const decoded = atob(importCode);
                             importData = JSON.parse(decoded);
+                            decryptionSuccess = true;
                         } catch (e2) {
-                            // Try plain JSON
                             try {
                                 importData = JSON.parse(importCode);
+                                decryptionSuccess = true;
                             } catch (e3) {
                                 try {
                                     const decoded = decodeURIComponent(importCode);
                                     importData = JSON.parse(decoded);
-                                } catch (e4) {
-                                    throw new Error('Invalid export code format. Please check the code and try again.');
-                                }
+                                    decryptionSuccess = true;
+                                } catch (e4) {}
                             }
                         }
                     }
                     
-                    if (!importData || typeof importData !== 'object') {
-                        throw new Error('Invalid export data structure');
+                    if (!decryptionSuccess || !importData || typeof importData !== 'object') {
+                        throw new Error('Invalid export code format. Make sure you copied the entire code.');
                     }
                     
                     if (importData.profile) {
@@ -2989,7 +2899,6 @@
                     }, 1500);
                     
                 } catch (e) {
-                    console.error('Import error:', e);
                     document.getElementById('import-status').textContent = 'Error: ' + e.message;
                     document.getElementById('import-status').style.color = 'red';
                 }
@@ -3206,7 +3115,6 @@
 
                     startTimerWithSeconds(totalSeconds);
                     
-                    // Reset notification flag when starting new timer
                     hasShownTimerNotification = false;
                     stopTitleFlash();
                     document.title = originalTitle;
@@ -3227,7 +3135,6 @@
                     startTimerCountdown();
                     startBinaryStream();
                     
-                    // Reset notification flag
                     hasShownTimerNotification = false;
                     stopTitleFlash();
                     document.title = originalTitle;
@@ -3261,7 +3168,6 @@
                             clearInterval(timerInterval);
                             timerInterval = null;
                             
-                            // Show notification when timer completes
                             showTimerCompletionNotification();
                             
                             resetTimerFromButton();
@@ -3417,9 +3323,7 @@
                         
                         checkCompletion();
                         todoListInitialized = true;
-                    } catch (e) {
-                        console.error('Error loading todos:', e);
-                    }
+                    } catch (e) {}
                 }
             }
             
@@ -3475,16 +3379,13 @@
                 
                 if (!taskList || !addTaskButton) return;
                 
-                // Fade out
                 taskList.style.opacity = 0;
                 addTaskButton.style.opacity = 0;
 
-                // Wait for fade out, then clear and reset
                 setTimeout(() => {
                     taskList.innerHTML = '';
                     taskCount = 0;
                     
-                    // Reset to normal state
                     setTimeout(() => {
                         taskList.style.opacity = 1;
                         addTaskButton.style.opacity = 1;
@@ -3584,7 +3485,6 @@
                     modal.style.display = 'none';
                 }
                 
-                // Initialize the todo list
                 if (!todoListInitialized) {
                     loadTodos();
                 }
@@ -3648,9 +3548,7 @@
             
             function toggleFullscreen() {
                 if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen().catch(err => {
-                        console.log(`Error attempting to enable fullscreen: ${err.message}`);
-                    });
+                    document.documentElement.requestFullscreen();
                 } else {
                     if (document.exitFullscreen) {
                         document.exitFullscreen();
@@ -3686,7 +3584,7 @@
                         break;
                     case 'c':
                     case 'C':
-                        if (e.shiftKey && !e.ctrlKey && !e.altKey) {
+                        if (e.shiftKey) {
                             e.preventDefault();
                             toggleModal(themeModal);
                         }
