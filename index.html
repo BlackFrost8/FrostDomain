@@ -1676,16 +1676,8 @@
             </div>
             <button id="logout-button" style="margin-top:10px;">Logout</button>
             <div id="auth-status">Not logged in</div>
-            <div class="profile-control">
-                <label>GitHub Token (for cross-device sync):</label>
-                <input type="password" id="github-token" placeholder="Paste GitHub token (gist scope)">
-            </div>
-            <div class="profile-control">
-                <label>Gist ID (optional):</label>
-                <input type="text" id="github-gist-id" placeholder="Leave blank on first signup">
-            </div>
             <p style="font-size: 0.8rem; opacity: 0.85; margin-top: 8px;">
-                For true cross-device login, use the same GitHub token + gist ID on each device.
+                Uses cloud auth when Firebase is configured; otherwise falls back to local-only mode.
             </p>
             
             <div class="profile-control">
@@ -1842,6 +1834,9 @@
         </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
     <script>
         (function() {
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -1922,10 +1917,16 @@
             let titleFlashInterval = null;
             let originalTitle = document.title;
             let currentUser = localStorage.getItem('fd_current_user') || null;
-            let currentPasswordHash = localStorage.getItem('fd_current_password_hash') || null;
-            let githubToken = localStorage.getItem('fd_github_token') || '';
-            let githubGistId = localStorage.getItem('fd_github_gist_id') || '';
-            const GITHUB_GIST_FILE = 'focusdomain-users.json';
+            let currentUserUid = localStorage.getItem('fd_current_user_uid') || null;
+            let firebaseReady = false;
+            let auth = null;
+            let db = null;
+            const firebaseConfig = {
+                apiKey: "REPLACE_WITH_FIREBASE_API_KEY",
+                authDomain: "REPLACE_WITH_FIREBASE_AUTH_DOMAIN",
+                projectId: "REPLACE_WITH_FIREBASE_PROJECT_ID",
+                appId: "REPLACE_WITH_FIREBASE_APP_ID"
+            };
             
             if ('Notification' in window && Notification.permission === 'default') {
                 Notification.requestPermission();
@@ -1933,7 +1934,26 @@
             
             document.addEventListener('DOMContentLoaded', initializeApp);
             
+            function initializeFirebase() {
+                try {
+                    const required = Object.values(firebaseConfig).every(v => v && !String(v).startsWith('REPLACE_WITH_'));
+                    if (!required || typeof firebase === 'undefined') {
+                        return;
+                    }
+
+                    if (!firebase.apps.length) {
+                        firebase.initializeApp(firebaseConfig);
+                    }
+                    auth = firebase.auth();
+                    db = firebase.firestore();
+                    firebaseReady = true;
+                } catch (e) {
+                    firebaseReady = false;
+                }
+            }
+
             async function initializeApp() {
+                initializeFirebase();
                 if (isMobile) {
                     document.body.classList.add('mobile');
                     instructions.textContent = "Tap bottom of screen to show navigation arrows";
@@ -2641,29 +2661,6 @@
             }
 
             async function getUsersStore() {
-                if (githubToken && githubGistId) {
-                    try {
-                        const response = await fetch(`https://api.github.com/gists/${githubGistId}`, {
-                            headers: {
-                                'Accept': 'application/vnd.github+json',
-                                'Authorization': `Bearer ${githubToken}`
-                            }
-                        });
-
-                        if (!response.ok) {
-                            throw new Error('Could not read GitHub gist');
-                        }
-
-                        const gist = await response.json();
-                        const file = gist.files && gist.files[GITHUB_GIST_FILE];
-                        if (!file || !file.content) return {};
-                        const parsed = JSON.parse(file.content);
-                        return parsed.users || {};
-                    } catch (e) {
-                        updateAuthStatus('GitHub sync read failed. Check token/gist ID.');
-                    }
-                }
-
                 try {
                     return JSON.parse(localStorage.getItem('fd_users') || '{}');
                 } catch (e) {
@@ -2673,64 +2670,6 @@
 
             async function setUsersStore(users) {
                 localStorage.setItem('fd_users', JSON.stringify(users));
-
-                if (githubToken && githubGistId) {
-                    try {
-                        const response = await fetch(`https://api.github.com/gists/${githubGistId}`, {
-                            method: 'PATCH',
-                            headers: {
-                                'Accept': 'application/vnd.github+json',
-                                'Authorization': `Bearer ${githubToken}`,
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                files: {
-                                    [GITHUB_GIST_FILE]: {
-                                        content: JSON.stringify({ users }, null, 2)
-                                    }
-                                }
-                            })
-                        });
-
-                        if (!response.ok) {
-                            throw new Error('Could not update GitHub gist');
-                        }
-                    } catch (e) {
-                        updateAuthStatus('GitHub sync write failed. Changes kept locally.');
-                    }
-                }
-            }
-
-            async function createGitHubGistIfNeeded() {
-                if (!githubToken || githubGistId) return;
-
-                const response = await fetch('https://api.github.com/gists', {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/vnd.github+json',
-                        'Authorization': `Bearer ${githubToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        description: 'Focus Domain account sync store',
-                        public: false,
-                        files: {
-                            [GITHUB_GIST_FILE]: {
-                                content: JSON.stringify({ users: {} }, null, 2)
-                            }
-                        }
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Could not create gist. Verify token has gist permission.');
-                }
-
-                const gist = await response.json();
-                githubGistId = gist.id;
-                localStorage.setItem('fd_github_gist_id', githubGistId);
-                const gistIdInput = document.getElementById('github-gist-id');
-                if (gistIdInput) gistIdInput.value = githubGistId;
             }
 
             function setupAuthSystem() {
@@ -2762,17 +2701,11 @@
             async function handleSignup() {
                 const usernameInput = document.getElementById('auth-username').value.trim();
                 const password = document.getElementById('auth-password').value;
+                const email = document.getElementById('profile-email').value.trim();
                 const username = usernameInput.toLowerCase();
-                const tokenInput = document.getElementById('github-token').value.trim();
-                const gistInput = document.getElementById('github-gist-id').value.trim();
 
-                githubToken = tokenInput || githubToken;
-                githubGistId = gistInput || githubGistId;
-                localStorage.setItem('fd_github_token', githubToken);
-                if (githubGistId) localStorage.setItem('fd_github_gist_id', githubGistId);
-
-                if (!username || !password) {
-                    updateAuthStatus('Please enter username and password');
+                if (!username || !password || !email) {
+                    updateAuthStatus('Please enter username, email, and password');
                     return;
                 }
 
@@ -2781,16 +2714,44 @@
                     return;
                 }
 
-                if (!githubToken) {
-                    updateAuthStatus('Add a GitHub token for cross-device sign in.');
-                    return;
-                }
+                const profile = {
+                    name: document.getElementById('profile-name').value || usernameInput,
+                    email,
+                    avatarUrl: document.getElementById('profile-avatar-url').value
+                };
+                localStorage.setItem('userProfile', JSON.stringify(profile));
 
-                try {
-                    await createGitHubGistIfNeeded();
-                } catch (e) {
-                    updateAuthStatus(e.message);
-                    return;
+                const passwordHash = await hashPassword(password);
+                if (firebaseReady && auth && db) {
+                    try {
+                        const usernameDoc = await db.collection('focus_usernames').doc(username).get();
+                        if (usernameDoc.exists) {
+                            updateAuthStatus('Username already taken. Please choose another.');
+                            return;
+                        }
+
+                        const credential = await auth.createUserWithEmailAndPassword(email, password);
+                        const uid = credential.user.uid;
+                        await db.collection('focus_usernames').doc(username).set({ uid, email, createdAt: Date.now() });
+                        await db.collection('focus_users').doc(uid).set({
+                            username,
+                            email,
+                            passwordHash,
+                            data: getAllData(),
+                            createdAt: Date.now(),
+                            updatedAt: Date.now()
+                        });
+
+                        currentUser = username;
+                        currentUserUid = uid;
+                        localStorage.setItem('fd_current_user', username);
+                        localStorage.setItem('fd_current_user_uid', uid);
+                        updateAuthStatus('Sign up successful. You are now logged in.');
+                        return;
+                    } catch (e) {
+                        updateAuthStatus(e.message.includes('email-already-in-use') ? 'Email already in use.' : 'Signup failed. Check Firebase config/rules.');
+                        return;
+                    }
                 }
 
                 const users = await getUsersStore();
@@ -2798,43 +2759,52 @@
                     updateAuthStatus('Username already taken. Please choose another.');
                     return;
                 }
-
-                const profile = {
-                    name: document.getElementById('profile-name').value || usernameInput,
-                    email: document.getElementById('profile-email').value,
-                    avatarUrl: document.getElementById('profile-avatar-url').value
-                };
-                localStorage.setItem('userProfile', JSON.stringify(profile));
-
-                const passwordHash = await hashPassword(password);
-                users[username] = {
-                    passwordHash,
-                    data: getAllData(),
-                    createdAt: Date.now(),
-                    updatedAt: Date.now()
-                };
-
+                users[username] = { passwordHash, data: getAllData(), createdAt: Date.now(), updatedAt: Date.now() };
                 await setUsersStore(users);
                 currentUser = username;
-                currentPasswordHash = passwordHash;
                 localStorage.setItem('fd_current_user', username);
-                localStorage.setItem('fd_current_password_hash', passwordHash);
-                updateAuthStatus('Sign up successful. You are now logged in.');
+                updateAuthStatus('Signed up in local mode (same-device only).');
             }
 
             async function handleLogin() {
                 const username = document.getElementById('auth-username').value.trim().toLowerCase();
                 const password = document.getElementById('auth-password').value;
-                const tokenInput = document.getElementById('github-token').value.trim();
-                const gistInput = document.getElementById('github-gist-id').value.trim();
-                githubToken = tokenInput || githubToken;
-                githubGistId = gistInput || githubGistId;
-                localStorage.setItem('fd_github_token', githubToken);
-                if (githubGistId) localStorage.setItem('fd_github_gist_id', githubGistId);
+                const email = document.getElementById('profile-email').value.trim();
+
+                const passwordHash = await hashPassword(password);
+                if (firebaseReady && auth && db) {
+                    try {
+                        if (!email) {
+                            updateAuthStatus('Enter your email to login.');
+                            return;
+                        }
+                        const credential = await auth.signInWithEmailAndPassword(email, password);
+                        const uid = credential.user.uid;
+                        const userDoc = await db.collection('focus_users').doc(uid).get();
+                        if (!userDoc.exists) {
+                            updateAuthStatus('Account data not found.');
+                            return;
+                        }
+                        const userData = userDoc.data();
+                        if (username && userData.username !== username) {
+                            updateAuthStatus('Username does not match this email.');
+                            return;
+                        }
+                        currentUser = userData.username || username || email;
+                        currentUserUid = uid;
+                        localStorage.setItem('fd_current_user', currentUser);
+                        localStorage.setItem('fd_current_user_uid', uid);
+                        applyAccountData(userData.data);
+                        updateAuthStatus(`Welcome back, ${currentUser}`);
+                        return;
+                    } catch (e) {
+                        updateAuthStatus('Invalid email or password.');
+                        return;
+                    }
+                }
 
                 const users = await getUsersStore();
                 const user = users[username];
-                const passwordHash = await hashPassword(password);
 
                 if (!user || user.passwordHash !== passwordHash) {
                     updateAuthStatus('Invalid username or password');
@@ -2842,19 +2812,20 @@
                 }
 
                 currentUser = username;
-                currentPasswordHash = passwordHash;
                 localStorage.setItem('fd_current_user', username);
-                localStorage.setItem('fd_current_password_hash', passwordHash);
                 applyAccountData(user.data);
                 updateAuthStatus(`Welcome back, ${username}`);
             }
 
             async function handleLogout() {
                 await persistCurrentUserData();
+                if (firebaseReady && auth && auth.currentUser) {
+                    await auth.signOut();
+                }
                 currentUser = null;
-                currentPasswordHash = null;
+                currentUserUid = null;
                 localStorage.removeItem('fd_current_user');
-                localStorage.removeItem('fd_current_password_hash');
+                localStorage.removeItem('fd_current_user_uid');
                 updateAuthStatus('Logged out successfully');
             }
 
@@ -2864,12 +2835,27 @@
                     return;
                 }
 
+                if (firebaseReady && auth) {
+                    const sessionUser = auth.currentUser;
+                    if (sessionUser) {
+                        currentUserUid = sessionUser.uid;
+                        localStorage.setItem('fd_current_user_uid', sessionUser.uid);
+                        const userDoc = await db.collection('focus_users').doc(sessionUser.uid).get();
+                        if (userDoc.exists) {
+                            const data = userDoc.data();
+                            currentUser = data.username || currentUser;
+                            localStorage.setItem('fd_current_user', currentUser);
+                            applyAccountData(data.data);
+                            updateAuthStatus();
+                            return;
+                        }
+                    }
+                }
+
                 const users = await getUsersStore();
                 if (!users[currentUser]) {
                     currentUser = null;
-                    currentPasswordHash = null;
                     localStorage.removeItem('fd_current_user');
-                    localStorage.removeItem('fd_current_password_hash');
                     updateAuthStatus();
                     return;
                 }
@@ -2880,6 +2866,15 @@
 
             async function persistCurrentUserData() {
                 if (!currentUser) return;
+
+                if (firebaseReady && db && currentUserUid) {
+                    await db.collection('focus_users').doc(currentUserUid).set({
+                        username: currentUser,
+                        data: getAllData(),
+                        updatedAt: Date.now()
+                    }, { merge: true });
+                    return;
+                }
 
                 const users = await getUsersStore();
                 if (!users[currentUser]) return;
@@ -3430,8 +3425,6 @@
                 const profileEmailInput = document.getElementById('profile-email');
                 const profileAvatarInput = document.getElementById('profile-avatar-url');
                 const usernameInput = document.getElementById('auth-username');
-                const githubTokenInput = document.getElementById('github-token');
-                const githubGistInput = document.getElementById('github-gist-id');
 
                 if (profileNameInput && !profileNameInput.value) {
                     profileNameInput.value = savedProfile.name || '';
@@ -3444,12 +3437,6 @@
                 }
                 if (usernameInput && currentUser && !usernameInput.value) {
                     usernameInput.value = currentUser;
-                }
-                if (githubTokenInput && githubToken && !githubTokenInput.value) {
-                    githubTokenInput.value = githubToken;
-                }
-                if (githubGistInput && githubGistId && !githubGistInput.value) {
-                    githubGistInput.value = githubGistId;
                 }
             }
             
