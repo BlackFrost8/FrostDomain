@@ -1432,7 +1432,7 @@
                 <i>🎨</i> Theme Customizer
             </button>
             <button class="control-button" id="profile-btn">
-                <i>👤</i> Profile Settings
+                <i>👤</i> Profile & Account
             </button>
             <button class="control-button" id="auth-btn">
                 <i>🔐</i> Login / Sign Up
@@ -1500,7 +1500,7 @@
                 <i>🎨</i> Theme Customizer
             </button>
             <button class="mobile-control-button" id="profile-btn-mobile">
-                <i>👤</i> Profile Settings
+                <i>👤</i> Profile & Account
             </button>
             <button class="mobile-control-button" id="auth-btn-mobile">
                 <i>🔐</i> Login / Sign Up
@@ -1660,6 +1660,25 @@
                 <label>Email:</label>
                 <input type="email" id="profile-email" placeholder="Enter your email">
             </div>
+
+            <h3 style="margin-top: 10px; border-bottom: 1px solid var(--main-color); padding-bottom: 5px;">Account Login</h3>
+            <div class="profile-control">
+                <label>Username:</label>
+                <input type="text" id="auth-username" placeholder="Create your username">
+            </div>
+            <div class="profile-control">
+                <label>Password (8+ characters):</label>
+                <input type="password" id="auth-password" placeholder="Create your password">
+            </div>
+            <div class="auth-row">
+                <button id="signup-button">Sign Up</button>
+                <button id="login-button">Login</button>
+            </div>
+            <button id="logout-button" style="margin-top:10px;">Logout</button>
+            <div id="auth-status">Not logged in</div>
+            <p style="font-size: 0.8rem; opacity: 0.85; margin-top: 8px;">
+                Account sync is currently saved in your browser storage. To move data across devices, use Save & Load → Export/Import.
+            </p>
             
             <div class="profile-control">
                 <label>Profile Picture:</label>
@@ -2625,6 +2644,7 @@
                 logoutButton.addEventListener('click', handleLogout);
 
                 updateAuthStatus();
+                syncProfileInputs();
                 setInterval(persistCurrentUserData, 5000);
             }
 
@@ -2641,18 +2661,32 @@
             }
 
             function handleSignup() {
-                const username = document.getElementById('auth-username').value.trim();
+                const usernameInput = document.getElementById('auth-username').value.trim();
                 const password = document.getElementById('auth-password').value;
+                const username = usernameInput.toLowerCase();
+
                 if (!username || !password) {
                     updateAuthStatus('Please enter username and password');
                     return;
                 }
 
-                const users = getUsersStore();
-                if (users[username]) {
-                    updateAuthStatus('Username already exists. Please login.');
+                if (password.length < 8) {
+                    updateAuthStatus('Password must be at least 8 characters');
                     return;
                 }
+
+                const users = getUsersStore();
+                if (users[username]) {
+                    updateAuthStatus('Username already taken. Please choose another.');
+                    return;
+                }
+
+                const profile = {
+                    name: document.getElementById('profile-name').value || usernameInput,
+                    email: document.getElementById('profile-email').value,
+                    avatarUrl: document.getElementById('profile-avatar-url').value
+                };
+                localStorage.setItem('userProfile', JSON.stringify(profile));
 
                 users[username] = {
                     password,
@@ -2668,7 +2702,7 @@
             }
 
             function handleLogin() {
-                const username = document.getElementById('auth-username').value.trim();
+                const username = document.getElementById('auth-username').value.trim().toLowerCase();
                 const password = document.getElementById('auth-password').value;
                 const users = getUsersStore();
                 const user = users[username];
@@ -2753,6 +2787,7 @@
                 loadImageFromStorage();
                 initializeTimerFromStorage();
                 showWallpaper(currentWallpaperIndex);
+                syncProfileInputs();
             }
             
             function encryptData(data, key) {
@@ -3181,6 +3216,7 @@
                     profileNameDisplay.textContent = profile.name || 'User';
                     updateProfileAvatar(profile.avatarUrl, profile.name);
                 }
+                syncProfileInputs();
                 
                 profileName.addEventListener('input', () => {
                     profileNameDisplay.textContent = profileName.value || 'User';
@@ -3249,6 +3285,28 @@
                     const profile = JSON.parse(savedProfile);
                     profileHoverName.textContent = profile.name || 'User';
                     updateProfileAvatar(profile.avatarUrl, profile.name);
+                }
+                syncProfileInputs();
+            }
+
+            function syncProfileInputs() {
+                const savedProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+                const profileNameInput = document.getElementById('profile-name');
+                const profileEmailInput = document.getElementById('profile-email');
+                const profileAvatarInput = document.getElementById('profile-avatar-url');
+                const usernameInput = document.getElementById('auth-username');
+
+                if (profileNameInput && !profileNameInput.value) {
+                    profileNameInput.value = savedProfile.name || '';
+                }
+                if (profileEmailInput && !profileEmailInput.value) {
+                    profileEmailInput.value = savedProfile.email || '';
+                }
+                if (profileAvatarInput && !profileAvatarInput.value) {
+                    profileAvatarInput.value = savedProfile.avatarUrl || '';
+                }
+                if (usernameInput && currentUser && !usernameInput.value) {
+                    usernameInput.value = currentUser;
                 }
             }
             
