@@ -2284,87 +2284,87 @@
                     oscillator2.stop(audioContext.currentTime + 0.5);
                 } catch (e) {}
             }
+
+            function safeAddEventListener(element, eventName, handler) {
+                if (!element) return;
+                element.addEventListener(eventName, handler);
+            }
             
             function setupEventListeners() {
                 document.addEventListener('mousemove', handleMouseMove);
                 
-                prevWallpaperBtn.addEventListener('click', () => changeWallpaper(-1));
-                nextWallpaperBtn.addEventListener('click', () => changeWallpaper(1));
-                prevWallpaperArrow.addEventListener('click', () => changeWallpaper(-1));
-                nextWallpaperArrow.addEventListener('click', () => changeWallpaper(1));
+                safeAddEventListener(prevWallpaperBtn, 'click', () => changeWallpaper(-1));
+                safeAddEventListener(nextWallpaperBtn, 'click', () => changeWallpaper(1));
+                safeAddEventListener(prevWallpaperArrow, 'click', () => changeWallpaper(-1));
+                safeAddEventListener(nextWallpaperArrow, 'click', () => changeWallpaper(1));
                 
-                prevWallpaperBtnMobile.addEventListener('click', () => changeWallpaper(-1));
-                nextWallpaperBtnMobile.addEventListener('click', () => changeWallpaper(1));
-                prevWallpaperArrowMobile.addEventListener('click', () => changeWallpaper(-1));
-                nextWallpaperArrowMobile.addEventListener('click', () => changeWallpaper(1));
+                safeAddEventListener(prevWallpaperBtnMobile, 'click', () => changeWallpaper(-1));
+                safeAddEventListener(nextWallpaperBtnMobile, 'click', () => changeWallpaper(1));
+                safeAddEventListener(prevWallpaperArrowMobile, 'click', () => changeWallpaper(-1));
+                safeAddEventListener(nextWallpaperArrowMobile, 'click', () => changeWallpaper(1));
                 
-                saveLoadBtn.addEventListener('click', () => toggleModal(saveLoadModal));
-                themeBtn.addEventListener('click', () => toggleModal(themeModal));
-                profileBtn.addEventListener('click', () => toggleModal(profileModal));
-                authBtn.addEventListener('click', () => toggleModal(authModal));
-                notesBtn.addEventListener('click', () => toggleModal(notesModal));
-                infoBtn.addEventListener('click', () => toggleModal(infoModal));
+                safeAddEventListener(saveLoadBtn, 'click', () => toggleModal(saveLoadModal));
+                safeAddEventListener(themeBtn, 'click', () => toggleModal(themeModal));
+                safeAddEventListener(profileBtn, 'click', () => toggleModal(profileModal));
+                safeAddEventListener(notesBtn, 'click', () => toggleModal(notesModal));
+                safeAddEventListener(infoBtn, 'click', () => toggleModal(infoModal));
                 
-                saveLoadBtnMobile.addEventListener('click', () => {
+                safeAddEventListener(saveLoadBtnMobile, 'click', () => {
                     toggleModal(saveLoadModal);
                     toggleMobileMenu();
                 });
-                themeBtnMobile.addEventListener('click', () => {
+                safeAddEventListener(themeBtnMobile, 'click', () => {
                     toggleModal(themeModal);
                     toggleMobileMenu();
                 });
-                profileBtnMobile.addEventListener('click', () => {
+                safeAddEventListener(profileBtnMobile, 'click', () => {
                     toggleModal(profileModal);
                     toggleMobileMenu();
                 });
-                authBtnMobile.addEventListener('click', () => {
-                    toggleModal(authModal);
-                    toggleMobileMenu();
-                });
-                notesBtnMobile.addEventListener('click', () => {
+                safeAddEventListener(notesBtnMobile, 'click', () => {
                     toggleModal(notesModal);
                     toggleMobileMenu();
                 });
-                infoBtnMobile.addEventListener('click', () => {
+                safeAddEventListener(infoBtnMobile, 'click', () => {
                     toggleModal(infoModal);
                     toggleMobileMenu();
                 });
                 
-                exitImageBtnMobile.addEventListener('click', () => {
+                safeAddEventListener(exitImageBtnMobile, 'click', () => {
                     exitImageFullscreen();
                     toggleMobileMenu();
                 });
                 
-                timerStartBtn.addEventListener('click', startTimer);
-                timerPauseBtn.addEventListener('click', togglePauseTimer);
-                timerAddBtn.addEventListener('click', addFiveMinutes);
-                timerResetBtn.addEventListener('click', resetTimer);
+                safeAddEventListener(timerStartBtn, 'click', startTimer);
+                safeAddEventListener(timerPauseBtn, 'click', togglePauseTimer);
+                safeAddEventListener(timerAddBtn, 'click', addFiveMinutes);
+                safeAddEventListener(timerResetBtn, 'click', resetTimer);
                 
-                timerStartBtnMobile.addEventListener('click', () => {
+                safeAddEventListener(timerStartBtnMobile, 'click', () => {
                     startTimer();
                     toggleMobileMenu();
                 });
-                timerPauseBtnMobile.addEventListener('click', () => {
+                safeAddEventListener(timerPauseBtnMobile, 'click', () => {
                     togglePauseTimer();
                     toggleMobileMenu();
                 });
-                timerAddBtnMobile.addEventListener('click', () => {
+                safeAddEventListener(timerAddBtnMobile, 'click', () => {
                     addFiveMinutes();
                     toggleMobileMenu();
                 });
-                timerResetBtnMobile.addEventListener('click', () => {
+                safeAddEventListener(timerResetBtnMobile, 'click', () => {
                     resetTimer();
                     toggleMobileMenu();
                 });
                 
-                todoAddBtn.addEventListener('click', addTodo);
-                todoClearBtn.addEventListener('click', clearCompletedTodos);
+                safeAddEventListener(todoAddBtn, 'click', addTodo);
+                safeAddEventListener(todoClearBtn, 'click', clearCompletedTodos);
                 
-                todoAddBtnMobile.addEventListener('click', () => {
+                safeAddEventListener(todoAddBtnMobile, 'click', () => {
                     addTodo();
                     toggleMobileMenu();
                 });
-                todoClearBtnMobile.addEventListener('click', () => {
+                safeAddEventListener(todoClearBtnMobile, 'click', () => {
                     clearCompletedTodos();
                     toggleMobileMenu();
                 });
@@ -2376,8 +2376,8 @@
                     });
                 });
                 
-                mobileMenuButton.addEventListener('click', toggleMobileMenu);
-                fullscreenToggle.addEventListener('click', toggleFullscreen);
+                safeAddEventListener(mobileMenuButton, 'click', toggleMobileMenu);
+                safeAddEventListener(fullscreenToggle, 'click', toggleFullscreen);
                 
                 document.addEventListener('click', (e) => {
                     if (isMobileMenuOpen && 
@@ -3350,17 +3350,19 @@
                 }
                 syncProfileInputs();
                 
-                profileAvatarUrl.addEventListener('input', () => {
+                safeAddEventListener(profileAvatarUrl, 'input', () => {
                     updateProfileAvatar(profileAvatarUrl.value, currentUser || 'User');
                 });
                 
-                saveProfileBtn.addEventListener('click', saveProfile);
+                safeAddEventListener(saveProfileBtn, 'click', saveProfile);
                 
-                uploadAvatarBtn.addEventListener('click', () => {
-                    avatarFileInput.click();
+                safeAddEventListener(uploadAvatarBtn, 'click', () => {
+                    if (avatarFileInput) {
+                        avatarFileInput.click();
+                    }
                 });
                 
-                avatarFileInput.addEventListener('change', function(e) {
+                safeAddEventListener(avatarFileInput, 'change', function(e) {
                     const file = e.target.files[0];
                     if (file && file.type.startsWith('image/')) {
                         const reader = new FileReader();
