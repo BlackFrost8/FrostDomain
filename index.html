@@ -284,6 +284,12 @@
             transform: scale(1);
         }
 
+        #profile-modal .modal-content {
+            max-height: 80vh;
+            overflow-y: auto;
+            padding-right: 12px;
+        }
+
         .modal-content h2 {
             text-align: center;
             margin-bottom: 20px;
@@ -1434,9 +1440,6 @@
             <button class="control-button" id="profile-btn">
                 <i>👤</i> Profile & Account
             </button>
-            <button class="control-button" id="auth-btn">
-                <i>🔐</i> Login / Sign Up
-            </button>
             <button class="control-button" id="notes-btn">
                 <i>📝</i> Notes
             </button>
@@ -1501,9 +1504,6 @@
             </button>
             <button class="mobile-control-button" id="profile-btn-mobile">
                 <i>👤</i> Profile & Account
-            </button>
-            <button class="mobile-control-button" id="auth-btn-mobile">
-                <i>🔐</i> Login / Sign Up
             </button>
             <button class="mobile-control-button" id="notes-btn-mobile">
                 <i>📝</i> Notes
@@ -1676,8 +1676,16 @@
             </div>
             <button id="logout-button" style="margin-top:10px;">Logout</button>
             <div id="auth-status">Not logged in</div>
+            <div class="profile-control">
+                <label>GitHub Token (for cross-device sync):</label>
+                <input type="password" id="github-token" placeholder="Paste GitHub token (gist scope)">
+            </div>
+            <div class="profile-control">
+                <label>Gist ID (optional):</label>
+                <input type="text" id="github-gist-id" placeholder="Leave blank on first signup">
+            </div>
             <p style="font-size: 0.8rem; opacity: 0.85; margin-top: 8px;">
-                Account sync is currently saved in your browser storage. To move data across devices, use Save & Load → Export/Import.
+                For true cross-device login, use the same GitHub token + gist ID on each device.
             </p>
             
             <div class="profile-control">
@@ -1914,6 +1922,10 @@
             let titleFlashInterval = null;
             let originalTitle = document.title;
             let currentUser = localStorage.getItem('fd_current_user') || null;
+            let currentPasswordHash = localStorage.getItem('fd_current_password_hash') || null;
+            let githubToken = localStorage.getItem('fd_github_token') || '';
+            let githubGistId = localStorage.getItem('fd_github_gist_id') || '';
+            const GITHUB_GIST_FILE = 'focusdomain-users.json';
             
             if ('Notification' in window && Notification.permission === 'default') {
                 Notification.requestPermission();
@@ -1921,7 +1933,7 @@
             
             document.addEventListener('DOMContentLoaded', initializeApp);
             
-            function initializeApp() {
+            async function initializeApp() {
                 if (isMobile) {
                     document.body.classList.add('mobile');
                     instructions.textContent = "Tap bottom of screen to show navigation arrows";
@@ -1952,7 +1964,7 @@
                 
                 setupEventListeners();
                 setupAuthSystem();
-                restoreCurrentUserData();
+                await restoreCurrentUserData();
                 showWallpaper(currentWallpaperIndex);
                 
                 setTimeout(() => {
@@ -2622,7 +2634,36 @@
                 document.querySelectorAll('.celebration, .confetti').forEach(el => el.remove());
             }
 
-            function getUsersStore() {
+            async function hashPassword(password) {
+                const data = new TextEncoder().encode(password);
+                const digest = await crypto.subtle.digest('SHA-256', data);
+                return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+
+            async function getUsersStore() {
+                if (githubToken && githubGistId) {
+                    try {
+                        const response = await fetch(`https://api.github.com/gists/${githubGistId}`, {
+                            headers: {
+                                'Accept': 'application/vnd.github+json',
+                                'Authorization': `Bearer ${githubToken}`
+                            }
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Could not read GitHub gist');
+                        }
+
+                        const gist = await response.json();
+                        const file = gist.files && gist.files[GITHUB_GIST_FILE];
+                        if (!file || !file.content) return {};
+                        const parsed = JSON.parse(file.content);
+                        return parsed.users || {};
+                    } catch (e) {
+                        updateAuthStatus('GitHub sync read failed. Check token/gist ID.');
+                    }
+                }
+
                 try {
                     return JSON.parse(localStorage.getItem('fd_users') || '{}');
                 } catch (e) {
@@ -2630,8 +2671,66 @@
                 }
             }
 
-            function setUsersStore(users) {
+            async function setUsersStore(users) {
                 localStorage.setItem('fd_users', JSON.stringify(users));
+
+                if (githubToken && githubGistId) {
+                    try {
+                        const response = await fetch(`https://api.github.com/gists/${githubGistId}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'Accept': 'application/vnd.github+json',
+                                'Authorization': `Bearer ${githubToken}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                files: {
+                                    [GITHUB_GIST_FILE]: {
+                                        content: JSON.stringify({ users }, null, 2)
+                                    }
+                                }
+                            })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Could not update GitHub gist');
+                        }
+                    } catch (e) {
+                        updateAuthStatus('GitHub sync write failed. Changes kept locally.');
+                    }
+                }
+            }
+
+            async function createGitHubGistIfNeeded() {
+                if (!githubToken || githubGistId) return;
+
+                const response = await fetch('https://api.github.com/gists', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/vnd.github+json',
+                        'Authorization': `Bearer ${githubToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        description: 'Focus Domain account sync store',
+                        public: false,
+                        files: {
+                            [GITHUB_GIST_FILE]: {
+                                content: JSON.stringify({ users: {} }, null, 2)
+                            }
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Could not create gist. Verify token has gist permission.');
+                }
+
+                const gist = await response.json();
+                githubGistId = gist.id;
+                localStorage.setItem('fd_github_gist_id', githubGistId);
+                const gistIdInput = document.getElementById('github-gist-id');
+                if (gistIdInput) gistIdInput.value = githubGistId;
             }
 
             function setupAuthSystem() {
@@ -2639,13 +2738,13 @@
                 const loginButton = document.getElementById('login-button');
                 const logoutButton = document.getElementById('logout-button');
 
-                signupButton.addEventListener('click', handleSignup);
-                loginButton.addEventListener('click', handleLogin);
-                logoutButton.addEventListener('click', handleLogout);
+                signupButton.addEventListener('click', () => handleSignup());
+                loginButton.addEventListener('click', () => handleLogin());
+                logoutButton.addEventListener('click', () => handleLogout());
 
                 updateAuthStatus();
                 syncProfileInputs();
-                setInterval(persistCurrentUserData, 5000);
+                setInterval(() => persistCurrentUserData(), 8000);
             }
 
             function updateAuthStatus(message) {
@@ -2660,10 +2759,17 @@
                 authStatus.textContent = currentUser ? `Logged in as: ${currentUser}` : 'Not logged in';
             }
 
-            function handleSignup() {
+            async function handleSignup() {
                 const usernameInput = document.getElementById('auth-username').value.trim();
                 const password = document.getElementById('auth-password').value;
                 const username = usernameInput.toLowerCase();
+                const tokenInput = document.getElementById('github-token').value.trim();
+                const gistInput = document.getElementById('github-gist-id').value.trim();
+
+                githubToken = tokenInput || githubToken;
+                githubGistId = gistInput || githubGistId;
+                localStorage.setItem('fd_github_token', githubToken);
+                if (githubGistId) localStorage.setItem('fd_github_gist_id', githubGistId);
 
                 if (!username || !password) {
                     updateAuthStatus('Please enter username and password');
@@ -2675,7 +2781,19 @@
                     return;
                 }
 
-                const users = getUsersStore();
+                if (!githubToken) {
+                    updateAuthStatus('Add a GitHub token for cross-device sign in.');
+                    return;
+                }
+
+                try {
+                    await createGitHubGistIfNeeded();
+                } catch (e) {
+                    updateAuthStatus(e.message);
+                    return;
+                }
+
+                const users = await getUsersStore();
                 if (users[username]) {
                     updateAuthStatus('Username already taken. Please choose another.');
                     return;
@@ -2688,53 +2806,70 @@
                 };
                 localStorage.setItem('userProfile', JSON.stringify(profile));
 
+                const passwordHash = await hashPassword(password);
                 users[username] = {
-                    password,
+                    passwordHash,
                     data: getAllData(),
                     createdAt: Date.now(),
                     updatedAt: Date.now()
                 };
 
-                setUsersStore(users);
+                await setUsersStore(users);
                 currentUser = username;
+                currentPasswordHash = passwordHash;
                 localStorage.setItem('fd_current_user', username);
+                localStorage.setItem('fd_current_password_hash', passwordHash);
                 updateAuthStatus('Sign up successful. You are now logged in.');
             }
 
-            function handleLogin() {
+            async function handleLogin() {
                 const username = document.getElementById('auth-username').value.trim().toLowerCase();
                 const password = document.getElementById('auth-password').value;
-                const users = getUsersStore();
-                const user = users[username];
+                const tokenInput = document.getElementById('github-token').value.trim();
+                const gistInput = document.getElementById('github-gist-id').value.trim();
+                githubToken = tokenInput || githubToken;
+                githubGistId = gistInput || githubGistId;
+                localStorage.setItem('fd_github_token', githubToken);
+                if (githubGistId) localStorage.setItem('fd_github_gist_id', githubGistId);
 
-                if (!user || user.password !== password) {
+                const users = await getUsersStore();
+                const user = users[username];
+                const passwordHash = await hashPassword(password);
+
+                if (!user || user.passwordHash !== passwordHash) {
                     updateAuthStatus('Invalid username or password');
                     return;
                 }
 
                 currentUser = username;
+                currentPasswordHash = passwordHash;
                 localStorage.setItem('fd_current_user', username);
+                localStorage.setItem('fd_current_password_hash', passwordHash);
                 applyAccountData(user.data);
                 updateAuthStatus(`Welcome back, ${username}`);
             }
 
-            function handleLogout() {
-                persistCurrentUserData();
+            async function handleLogout() {
+                await persistCurrentUserData();
                 currentUser = null;
+                currentPasswordHash = null;
                 localStorage.removeItem('fd_current_user');
+                localStorage.removeItem('fd_current_password_hash');
                 updateAuthStatus('Logged out successfully');
             }
 
-            function restoreCurrentUserData() {
+            async function restoreCurrentUserData() {
                 if (!currentUser) {
                     updateAuthStatus();
                     return;
                 }
 
-                const users = getUsersStore();
+                const users = await getUsersStore();
                 if (!users[currentUser]) {
                     currentUser = null;
+                    currentPasswordHash = null;
                     localStorage.removeItem('fd_current_user');
+                    localStorage.removeItem('fd_current_password_hash');
                     updateAuthStatus();
                     return;
                 }
@@ -2743,15 +2878,15 @@
                 updateAuthStatus();
             }
 
-            function persistCurrentUserData() {
+            async function persistCurrentUserData() {
                 if (!currentUser) return;
 
-                const users = getUsersStore();
+                const users = await getUsersStore();
                 if (!users[currentUser]) return;
 
                 users[currentUser].data = getAllData();
                 users[currentUser].updatedAt = Date.now();
-                setUsersStore(users);
+                await setUsersStore(users);
             }
 
             function applyAccountData(data) {
@@ -3295,6 +3430,8 @@
                 const profileEmailInput = document.getElementById('profile-email');
                 const profileAvatarInput = document.getElementById('profile-avatar-url');
                 const usernameInput = document.getElementById('auth-username');
+                const githubTokenInput = document.getElementById('github-token');
+                const githubGistInput = document.getElementById('github-gist-id');
 
                 if (profileNameInput && !profileNameInput.value) {
                     profileNameInput.value = savedProfile.name || '';
@@ -3307,6 +3444,12 @@
                 }
                 if (usernameInput && currentUser && !usernameInput.value) {
                     usernameInput.value = currentUser;
+                }
+                if (githubTokenInput && githubToken && !githubTokenInput.value) {
+                    githubTokenInput.value = githubToken;
+                }
+                if (githubGistInput && githubGistId && !githubGistInput.value) {
+                    githubGistInput.value = githubGistId;
                 }
             }
             
