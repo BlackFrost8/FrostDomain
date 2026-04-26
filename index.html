@@ -1434,6 +1434,9 @@
             <button class="control-button" id="profile-btn">
                 <i>👤</i> Profile & Account
             </button>
+            <button class="control-button" id="auth-btn">
+                <i>🔐</i> Login / Sign Up
+            </button>
             <button class="control-button" id="notes-btn">
                 <i>📝</i> Notes
             </button>
@@ -1499,6 +1502,9 @@
             <button class="mobile-control-button" id="profile-btn-mobile">
                 <i>👤</i> Profile & Account
             </button>
+            <button class="mobile-control-button" id="auth-btn-mobile">
+                <i>🔐</i> Login / Sign Up
+            </button>
             <button class="mobile-control-button" id="notes-btn-mobile">
                 <i>📝</i> Notes
             </button>
@@ -1540,6 +1546,27 @@
     <div id="profile-hover">
         <div id="profile-hover-avatar">👤</div>
         <div id="profile-hover-name">User</div>
+    </div>
+
+    <div id="auth-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal">×</button>
+            <h2>Account Login / Sign Up</h2>
+            <div class="profile-control">
+                <label for="auth-username">Username</label>
+                <input type="text" id="auth-username" placeholder="Choose or enter username">
+            </div>
+            <div class="profile-control">
+                <label for="auth-password">Password</label>
+                <input type="password" id="auth-password" placeholder="Password">
+            </div>
+            <div class="auth-row">
+                <button id="signup-button">Sign Up</button>
+                <button id="login-button">Login</button>
+            </div>
+            <button id="logout-button" style="margin-top:10px;">Logout</button>
+            <div id="auth-status">Not logged in</div>
+        </div>
     </div>
 
     <div class="fullscreen-toggle" id="fullscreen-toggle" title="Toggle Fullscreen">
@@ -1818,6 +1845,7 @@
             const saveLoadBtn = document.getElementById('save-load-btn');
             const themeBtn = document.getElementById('theme-btn');
             const profileBtn = document.getElementById('profile-btn');
+            const authBtn = document.getElementById('auth-btn');
             const notesBtn = document.getElementById('notes-btn');
             const infoBtn = document.getElementById('info-btn');
             const timerStartBtn = document.getElementById('timer-start-btn');
@@ -1833,6 +1861,7 @@
             const saveLoadBtnMobile = document.getElementById('save-load-btn-mobile');
             const themeBtnMobile = document.getElementById('theme-btn-mobile');
             const profileBtnMobile = document.getElementById('profile-btn-mobile');
+            const authBtnMobile = document.getElementById('auth-btn-mobile');
             const notesBtnMobile = document.getElementById('notes-btn-mobile');
             const infoBtnMobile = document.getElementById('info-btn-mobile');
             const timerStartBtnMobile = document.getElementById('timer-start-btn-mobile');
@@ -1846,6 +1875,7 @@
             const saveLoadModal = document.getElementById('save-load-modal');
             const themeModal = document.getElementById('theme-modal');
             const profileModal = document.getElementById('profile-modal');
+            const authModal = document.getElementById('auth-modal');
             const notesModal = document.getElementById('notes-modal');
             const infoModal = document.getElementById('info-modal');
             
@@ -2240,6 +2270,7 @@
                 saveLoadBtn.addEventListener('click', () => toggleModal(saveLoadModal));
                 themeBtn.addEventListener('click', () => toggleModal(themeModal));
                 profileBtn.addEventListener('click', () => toggleModal(profileModal));
+                authBtn.addEventListener('click', () => toggleModal(authModal));
                 notesBtn.addEventListener('click', () => toggleModal(notesModal));
                 infoBtn.addEventListener('click', () => toggleModal(infoModal));
                 
@@ -2253,6 +2284,10 @@
                 });
                 profileBtnMobile.addEventListener('click', () => {
                     toggleModal(profileModal);
+                    toggleMobileMenu();
+                });
+                authBtnMobile.addEventListener('click', () => {
+                    toggleModal(authModal);
                     toggleMobileMenu();
                 });
                 notesBtnMobile.addEventListener('click', () => {
