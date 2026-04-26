@@ -1648,14 +1648,8 @@
             
             <div id="profile-preview">
                 <div id="profile-avatar">👤</div>
-                <div id="profile-name-display">User</div>
             </div>
-            
-            <div class="profile-control">
-                <label>Name:</label>
-                <input type="text" id="profile-name" placeholder="Enter your name">
-            </div>
-            
+
             <div class="profile-control">
                 <label>Email:</label>
                 <input type="email" id="profile-email" placeholder="Enter your email">
@@ -1676,9 +1670,6 @@
             </div>
             <button id="logout-button" style="margin-top:10px;">Logout</button>
             <div id="auth-status">Not logged in</div>
-            <p style="font-size: 0.8rem; opacity: 0.85; margin-top: 8px;">
-                Uses cloud auth when Firebase is configured; otherwise falls back to local-only mode.
-            </p>
             
             <div class="profile-control">
                 <label>Profile Picture:</label>
@@ -2706,6 +2697,7 @@
                 const password = document.getElementById('auth-password').value;
                 const email = document.getElementById('profile-email').value.trim();
                 const username = usernameInput.toLowerCase();
+                updateAuthStatus('Creating account...');
 
                 if (!username || !password || !email) {
                     updateAuthStatus('Please enter username, email, and password');
@@ -2718,7 +2710,7 @@
                 }
 
                 const profile = {
-                    name: document.getElementById('profile-name').value || usernameInput,
+                    name: usernameInput,
                     email,
                     avatarUrl: document.getElementById('profile-avatar-url').value
                 };
@@ -2773,6 +2765,7 @@
                 const username = document.getElementById('auth-username').value.trim().toLowerCase();
                 const password = document.getElementById('auth-password').value;
                 const email = document.getElementById('profile-email').value.trim();
+                updateAuthStatus('Signing in...');
 
                 const passwordHash = await hashPassword(password);
                 if (firebaseReady && auth && db) {
@@ -3330,33 +3323,24 @@
             }
             
             function setupProfileSystem() {
-                const profileName = document.getElementById('profile-name');
                 const profileEmail = document.getElementById('profile-email');
                 const profileAvatarUrl = document.getElementById('profile-avatar-url');
                 const saveProfileBtn = document.getElementById('save-profile');
-                const profileNameDisplay = document.getElementById('profile-name-display');
-                const profileAvatar = document.getElementById('profile-avatar');
                 const uploadAvatarBtn = document.getElementById('upload-avatar-btn');
                 const avatarFileInput = document.getElementById('avatar-file-input');
                 
                 const savedProfile = localStorage.getItem('userProfile');
                 if (savedProfile) {
                     const profile = JSON.parse(savedProfile);
-                    profileName.value = profile.name || '';
                     profileEmail.value = profile.email || '';
                     profileAvatarUrl.value = profile.avatarUrl || '';
                     
-                    profileNameDisplay.textContent = profile.name || 'User';
                     updateProfileAvatar(profile.avatarUrl, profile.name);
                 }
                 syncProfileInputs();
                 
-                profileName.addEventListener('input', () => {
-                    profileNameDisplay.textContent = profileName.value || 'User';
-                });
-                
                 profileAvatarUrl.addEventListener('input', () => {
-                    updateProfileAvatar(profileAvatarUrl.value, profileName.value);
+                    updateProfileAvatar(profileAvatarUrl.value, currentUser || 'User');
                 });
                 
                 saveProfileBtn.addEventListener('click', saveProfile);
@@ -3371,7 +3355,7 @@
                         const reader = new FileReader();
                         reader.onload = function(e) {
                             profileAvatarUrl.value = e.target.result;
-                            updateProfileAvatar(e.target.result, profileName.value);
+                            updateProfileAvatar(e.target.result, currentUser || 'User');
                         };
                         reader.readAsDataURL(file);
                     }
@@ -3401,7 +3385,7 @@
             
             function saveProfile() {
                 const profile = {
-                    name: document.getElementById('profile-name').value,
+                    name: currentUser || 'User',
                     email: document.getElementById('profile-email').value,
                     avatarUrl: document.getElementById('profile-avatar-url').value
                 };
@@ -3424,14 +3408,10 @@
 
             function syncProfileInputs() {
                 const savedProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
-                const profileNameInput = document.getElementById('profile-name');
                 const profileEmailInput = document.getElementById('profile-email');
                 const profileAvatarInput = document.getElementById('profile-avatar-url');
                 const usernameInput = document.getElementById('auth-username');
 
-                if (profileNameInput && !profileNameInput.value) {
-                    profileNameInput.value = savedProfile.name || '';
-                }
                 if (profileEmailInput && !profileEmailInput.value) {
                     profileEmailInput.value = savedProfile.email || '';
                 }
