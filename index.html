@@ -1643,7 +1643,7 @@
 
     <div id="profile-modal" class="modal">
         <div class="modal-content">
-            <button class="close-modal" id="close-profile">×</button>
+            <button class="close-modal" id="close-profile" onclick="window.__focusDomainCloseProfile && window.__focusDomainCloseProfile()">×</button>
             <h2>Profile Settings</h2>
             
             <div id="profile-preview">
@@ -1665,10 +1665,10 @@
                 <input type="password" id="auth-password" placeholder="Create your password">
             </div>
             <div class="auth-row">
-                <button id="signup-button">Sign Up</button>
-                <button id="login-button">Login</button>
+                <button id="signup-button" onclick="window.__focusDomainSignup && window.__focusDomainSignup()">Sign Up</button>
+                <button id="login-button" onclick="window.__focusDomainLogin && window.__focusDomainLogin()">Login</button>
             </div>
-            <button id="logout-button" style="margin-top:10px;">Logout</button>
+            <button id="logout-button" style="margin-top:10px;" onclick="window.__focusDomainLogout && window.__focusDomainLogout()">Logout</button>
             <div id="auth-status">Not logged in</div>
             
             <div class="profile-control">
@@ -1979,6 +1979,10 @@
                 
                 setupEventListeners();
                 setupAuthSystem();
+                window.__focusDomainCloseProfile = () => closeModal(profileModal);
+                window.__focusDomainSignup = () => handleSignup();
+                window.__focusDomainLogin = () => handleLogin();
+                window.__focusDomainLogout = () => handleLogout();
                 await restoreCurrentUserData();
                 showWallpaper(currentWallpaperIndex);
                 
@@ -2677,14 +2681,6 @@
             }
 
             function setupAuthSystem() {
-                const signupButton = document.getElementById('signup-button');
-                const loginButton = document.getElementById('login-button');
-                const logoutButton = document.getElementById('logout-button');
-
-                signupButton.addEventListener('click', () => handleSignup());
-                loginButton.addEventListener('click', () => handleLogin());
-                logoutButton.addEventListener('click', () => handleLogout());
-
                 updateAuthStatus();
                 syncProfileInputs();
                 setInterval(() => persistCurrentUserData(), 8000);
