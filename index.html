@@ -692,6 +692,21 @@
             color: black;
         }
 
+        .timer-mode-toggle {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        #timer-mode {
+            background-color: black;
+            color: var(--main-color);
+            border: 1px solid var(--main-color);
+            padding: 8px 10px;
+            font-family: 'Courier New', monospace;
+            outline: none;
+        }
+
         #active-timer {
             display: none;
             position: fixed;
@@ -1767,6 +1782,12 @@
         <div id="timer-wallpaper" class="wallpaper active">
             <div id="timer-popup">
                 <h2>Study Timer</h2>
+                <div class="timer-mode-toggle">
+                    <select id="timer-mode">
+                        <option value="timer" selected>Timer</option>
+                        <option value="stopwatch">Stopwatch</option>
+                    </select>
+                </div>
                 <div class="time-inputs">
                     <div class="time-input-group">
                         <label>Hours</label>
@@ -3364,6 +3385,7 @@
                 const hoursInput = document.getElementById('hours');
                 const minutesInput = document.getElementById('minutes');
                 const secondsInput = document.getElementById('seconds');
+                const timerModeSelect = document.getElementById('timer-mode');
                 const startTimerBtn = document.getElementById('start-timer');
                 const activeTimer = document.getElementById('active-timer');
                 const controlButtons = document.getElementById('control-buttons');
@@ -3372,6 +3394,9 @@
                 const resetTimerBtn = document.getElementById('reset-timer');
                 
                 let binaryInterval;
+                let timerMode = 'timer';
+                let elapsedSeconds = 0;
+                let stopwatchStartTime = 0;
 
                 const timerArea = document.getElementById('timer-wallpaper');
                 timerArea.addEventListener('click', function(e) {
@@ -3398,6 +3423,15 @@
                 addTimeBtn.addEventListener('click', addFiveMinutesFromButton);
                 pauseTimerBtn.addEventListener('click', togglePauseFromButton);
                 resetTimerBtn.addEventListener('click', resetTimerFromButton);
+                timerModeSelect.addEventListener('change', () => {
+                    timerMode = timerModeSelect.value;
+                    const isStopwatch = timerMode === 'stopwatch';
+                    document.querySelectorAll('.time-input-group').forEach(group => {
+                        group.style.display = isStopwatch ? 'none' : 'flex';
+                    });
+                    addTimeBtn.style.display = isStopwatch ? 'none' : 'flex';
+                    startTimerBtn.textContent = isStopwatch ? 'Start Stopwatch' : 'Start';
+                });
                 document.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter' && document.getElementById('timer-wallpaper').classList.contains('active')) {
                         startTimerFromButton();
@@ -3410,6 +3444,11 @@
                 });
 
                 function startTimerFromButton() {
+                    if (timerMode === 'stopwatch') {
+                        startStopwatch();
+                        return;
+                    }
+
                     const hours = parseInt(hoursInput.value) || 0;
                     const minutes = parseInt(minutesInput.value) || 0;
                     const seconds = parseInt(secondsInput.value) || 0;
@@ -3422,6 +3461,17 @@
                     hasShownTimerNotification = false;
                     stopTitleFlash();
                     document.title = originalTitle;
+                }
+
+                function startStopwatch() {
+                    elapsedSeconds = 0;
+                    stopwatchStartTime = Date.now();
+                    showActiveTimer();
+                    isTimerRunning = true;
+                    isTimerPaused = false;
+                    startTimerCountdown();
+                    startBinaryStream();
+                    updateTimerDisplay(0);
                 }
                 
                 function startTimerWithSeconds(totalSeconds) {
@@ -3450,7 +3500,7 @@
                     controlButtons.style.display = 'flex';
                     pauseTimerBtn.textContent = 'II';
                     
-                    updateTimerDisplay(remainingSeconds);
+                    updateTimerDisplay(timerMode === 'stopwatch' ? elapsedSeconds : remainingSeconds);
                 }
                 
                 function startTimerCountdown() {
@@ -3468,6 +3518,12 @@
                     lastUpdateTime = now;
                     
                     if (!isTimerPaused) {
+                        if (timerMode === 'stopwatch') {
+                            elapsedSeconds = Math.floor((now - stopwatchStartTime) / 1000);
+                            updateTimerDisplay(elapsedSeconds);
+                            return;
+                        }
+
                         if (timerEndTime <= now) {
                             clearInterval(timerInterval);
                             timerInterval = null;
@@ -3495,6 +3551,7 @@
                 
                 function addFiveMinutesFromButton() {
                     if (!isTimerRunning) return;
+                    if (timerMode === 'stopwatch') return;
                     
                     remainingSeconds += 300;
                     if (!isTimerPaused) {
@@ -3524,13 +3581,19 @@
                             timerInterval = null;
                         }
                         localStorage.setItem('timerPaused', 'true');
-                        localStorage.setItem('timerRemaining', remainingSeconds.toString());
+                        if (timerMode === 'timer') {
+                            localStorage.setItem('timerRemaining', remainingSeconds.toString());
+                        }
                     } else {
                         pauseTimerBtn.textContent = 'II';
-                        timerEndTime = Date.now() + (remainingSeconds * 1000);
-                        localStorage.setItem('timerEndTime', timerEndTime.toString());
-                        localStorage.setItem('timerPaused', 'false');
-                        localStorage.removeItem('timerRemaining');
+                        if (timerMode === 'timer') {
+                            timerEndTime = Date.now() + (remainingSeconds * 1000);
+                            localStorage.setItem('timerEndTime', timerEndTime.toString());
+                            localStorage.setItem('timerPaused', 'false');
+                            localStorage.removeItem('timerRemaining');
+                        } else {
+                            stopwatchStartTime = Date.now() - (elapsedSeconds * 1000);
+                        }
                         startTimerCountdown();
                     }
                 }
@@ -3553,6 +3616,8 @@
                     isTimerRunning = false;
                     isTimerPaused = false;
                     remainingSeconds = 0;
+                    elapsedSeconds = 0;
+                    stopwatchStartTime = 0;
                     hasShownTimerNotification = false;
                     stopTitleFlash();
                     document.title = originalTitle;
