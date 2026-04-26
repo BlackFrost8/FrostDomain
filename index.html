@@ -284,6 +284,12 @@
             transform: scale(1);
         }
 
+        #profile-modal .modal-content {
+            max-height: 80vh;
+            overflow-y: auto;
+            padding-right: 12px;
+        }
+
         .modal-content h2 {
             text-align: center;
             margin-bottom: 20px;
@@ -340,7 +346,7 @@
             outline: none;
         }
 
-        #save-button, #load-button, #email-export {
+        #save-button, #load-button, #email-export, #signup-button, #login-button, #logout-button {
             width: 100%;
             padding: 10px;
             background-color: black;
@@ -352,7 +358,7 @@
             margin-bottom: 10px;
         }
 
-        #save-button:hover, #load-button:hover, #email-export:hover {
+        #save-button:hover, #load-button:hover, #email-export:hover, #signup-button:hover, #login-button:hover, #logout-button:hover {
             background-color: var(--main-color);
             color: black;
         }
@@ -500,6 +506,22 @@
             color: var(--main-color);
             border: 1px solid var(--main-color);
             border-radius: 4px;
+        }
+
+        #auth-status {
+            margin: 8px 0;
+            font-size: 0.85rem;
+            text-align: center;
+            color: var(--main-color);
+        }
+
+        .auth-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .auth-row button {
+            flex: 1;
         }
 
         #profile-preview {
@@ -1416,7 +1438,7 @@
                 <i>🎨</i> Theme Customizer
             </button>
             <button class="control-button" id="profile-btn">
-                <i>👤</i> Profile Settings
+                <i>👤</i> Profile & Account
             </button>
             <button class="control-button" id="notes-btn">
                 <i>📝</i> Notes
@@ -1481,7 +1503,7 @@
                 <i>🎨</i> Theme Customizer
             </button>
             <button class="mobile-control-button" id="profile-btn-mobile">
-                <i>👤</i> Profile Settings
+                <i>👤</i> Profile & Account
             </button>
             <button class="mobile-control-button" id="notes-btn-mobile">
                 <i>📝</i> Notes
@@ -1600,23 +1622,33 @@
 
     <div id="profile-modal" class="modal">
         <div class="modal-content">
-            <button class="close-modal" id="close-profile">×</button>
+            <button class="close-modal" id="close-profile" onclick="window.__focusDomainCloseProfile && window.__focusDomainCloseProfile()">×</button>
             <h2>Profile Settings</h2>
             
             <div id="profile-preview">
                 <div id="profile-avatar">👤</div>
-                <div id="profile-name-display">User</div>
             </div>
-            
+
             <div class="profile-control">
-                <label>Name:</label>
-                <input type="text" id="profile-name" placeholder="Enter your name">
+                <label>Email (optional):</label>
+                <input type="email" id="profile-email" placeholder="Enter your email (or leave blank)">
             </div>
-            
+
+            <h3 style="margin-top: 10px; border-bottom: 1px solid var(--main-color); padding-bottom: 5px;">Account Login</h3>
             <div class="profile-control">
-                <label>Email:</label>
-                <input type="email" id="profile-email" placeholder="Enter your email">
+                <label>Username:</label>
+                <input type="text" id="auth-username" placeholder="Create your username">
             </div>
+            <div class="profile-control">
+                <label>Password (8+ characters):</label>
+                <input type="password" id="auth-password" placeholder="Create your password">
+            </div>
+            <div class="auth-row">
+                <button id="signup-button" onclick="window.__focusDomainSignup && window.__focusDomainSignup()">Sign Up</button>
+                <button id="login-button" onclick="window.__focusDomainLogin && window.__focusDomainLogin()">Login</button>
+            </div>
+            <button id="logout-button" style="margin-top:10px;" onclick="window.__focusDomainLogout && window.__focusDomainLogout()">Logout</button>
+            <div id="auth-status">Not logged in</div>
             
             <div class="profile-control">
                 <label>Profile Picture:</label>
@@ -1772,6 +1804,9 @@
         </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
     <script>
         (function() {
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -1848,6 +1883,21 @@
             let hasShownTimerNotification = false;
             let titleFlashInterval = null;
             let originalTitle = document.title;
+            let currentUser = localStorage.getItem('fd_current_user') || null;
+            let currentUserUid = localStorage.getItem('fd_current_user_uid') || null;
+            let firebaseReady = false;
+            let auth = null;
+            let db = null;
+            let isAuthBusy = false;
+            const firebaseConfig = {
+                apiKey: "AIzaSyAf0kiCwy5eIZ13pbBlHJMKOyz4815AIx0",
+                authDomain: "focusdomain8.firebaseapp.com",
+                projectId: "focusdomain8",
+                storageBucket: "focusdomain8.firebasestorage.app",
+                messagingSenderId: "867834298462",
+                appId: "1:867834298462:web:93688e0fb5e1f3bb7234cf",
+                measurementId: "G-CEBWD36KNL"
+            };
             
             if ('Notification' in window && Notification.permission === 'default') {
                 Notification.requestPermission();
@@ -1855,7 +1905,26 @@
             
             document.addEventListener('DOMContentLoaded', initializeApp);
             
-            function initializeApp() {
+            function initializeFirebase() {
+                try {
+                    const required = Object.values(firebaseConfig).every(v => v && !String(v).startsWith('REPLACE_WITH_'));
+                    if (!required || typeof firebase === 'undefined') {
+                        return;
+                    }
+
+                    if (!firebase.apps.length) {
+                        firebase.initializeApp(firebaseConfig);
+                    }
+                    auth = firebase.auth();
+                    db = firebase.firestore();
+                    firebaseReady = true;
+                } catch (e) {
+                    firebaseReady = false;
+                }
+            }
+
+            async function initializeApp() {
+                initializeFirebase();
                 if (isMobile) {
                     document.body.classList.add('mobile');
                     instructions.textContent = "Tap bottom of screen to show navigation arrows";
@@ -1885,6 +1954,12 @@
                 }
                 
                 setupEventListeners();
+                setupAuthSystem();
+                window.__focusDomainCloseProfile = () => closeModal(profileModal);
+                window.__focusDomainSignup = () => handleSignup();
+                window.__focusDomainLogin = () => handleLogin();
+                window.__focusDomainLogout = () => handleLogout();
+                await restoreCurrentUserData();
                 showWallpaper(currentWallpaperIndex);
                 
                 setTimeout(() => {
@@ -1998,6 +2073,7 @@
             
             function saveCurrentState() {
                 localStorage.setItem('currentWallpaperIndex', currentWallpaperIndex.toString());
+                persistCurrentUserData();
             }
             
             function initializeTimerFromStorage() {
@@ -2184,82 +2260,87 @@
                     oscillator2.stop(audioContext.currentTime + 0.5);
                 } catch (e) {}
             }
+
+            function safeAddEventListener(element, eventName, handler) {
+                if (!element) return;
+                element.addEventListener(eventName, handler);
+            }
             
             function setupEventListeners() {
                 document.addEventListener('mousemove', handleMouseMove);
                 
-                prevWallpaperBtn.addEventListener('click', () => changeWallpaper(-1));
-                nextWallpaperBtn.addEventListener('click', () => changeWallpaper(1));
-                prevWallpaperArrow.addEventListener('click', () => changeWallpaper(-1));
-                nextWallpaperArrow.addEventListener('click', () => changeWallpaper(1));
+                safeAddEventListener(prevWallpaperBtn, 'click', () => changeWallpaper(-1));
+                safeAddEventListener(nextWallpaperBtn, 'click', () => changeWallpaper(1));
+                safeAddEventListener(prevWallpaperArrow, 'click', () => changeWallpaper(-1));
+                safeAddEventListener(nextWallpaperArrow, 'click', () => changeWallpaper(1));
                 
-                prevWallpaperBtnMobile.addEventListener('click', () => changeWallpaper(-1));
-                nextWallpaperBtnMobile.addEventListener('click', () => changeWallpaper(1));
-                prevWallpaperArrowMobile.addEventListener('click', () => changeWallpaper(-1));
-                nextWallpaperArrowMobile.addEventListener('click', () => changeWallpaper(1));
+                safeAddEventListener(prevWallpaperBtnMobile, 'click', () => changeWallpaper(-1));
+                safeAddEventListener(nextWallpaperBtnMobile, 'click', () => changeWallpaper(1));
+                safeAddEventListener(prevWallpaperArrowMobile, 'click', () => changeWallpaper(-1));
+                safeAddEventListener(nextWallpaperArrowMobile, 'click', () => changeWallpaper(1));
                 
-                saveLoadBtn.addEventListener('click', () => toggleModal(saveLoadModal));
-                themeBtn.addEventListener('click', () => toggleModal(themeModal));
-                profileBtn.addEventListener('click', () => toggleModal(profileModal));
-                notesBtn.addEventListener('click', () => toggleModal(notesModal));
-                infoBtn.addEventListener('click', () => toggleModal(infoModal));
+                safeAddEventListener(saveLoadBtn, 'click', () => toggleModal(saveLoadModal));
+                safeAddEventListener(themeBtn, 'click', () => toggleModal(themeModal));
+                safeAddEventListener(profileBtn, 'click', () => toggleModal(profileModal));
+                safeAddEventListener(notesBtn, 'click', () => toggleModal(notesModal));
+                safeAddEventListener(infoBtn, 'click', () => toggleModal(infoModal));
                 
-                saveLoadBtnMobile.addEventListener('click', () => {
+                safeAddEventListener(saveLoadBtnMobile, 'click', () => {
                     toggleModal(saveLoadModal);
                     toggleMobileMenu();
                 });
-                themeBtnMobile.addEventListener('click', () => {
+                safeAddEventListener(themeBtnMobile, 'click', () => {
                     toggleModal(themeModal);
                     toggleMobileMenu();
                 });
-                profileBtnMobile.addEventListener('click', () => {
+                safeAddEventListener(profileBtnMobile, 'click', () => {
                     toggleModal(profileModal);
                     toggleMobileMenu();
                 });
-                notesBtnMobile.addEventListener('click', () => {
+                safeAddEventListener(notesBtnMobile, 'click', () => {
                     toggleModal(notesModal);
                     toggleMobileMenu();
                 });
-                infoBtnMobile.addEventListener('click', () => {
+                safeAddEventListener(infoBtnMobile, 'click', () => {
                     toggleModal(infoModal);
                     toggleMobileMenu();
                 });
                 
-                exitImageBtnMobile.addEventListener('click', () => {
+                safeAddEventListener(exitImageBtnMobile, 'click', () => {
                     exitImageFullscreen();
                     toggleMobileMenu();
                 });
                 
-                timerStartBtn.addEventListener('click', startTimer);
-                timerPauseBtn.addEventListener('click', togglePauseTimer);
-                timerAddBtn.addEventListener('click', addFiveMinutes);
-                timerResetBtn.addEventListener('click', resetTimer);
+                safeAddEventListener(timerStartBtn, 'click', startTimer);
+                safeAddEventListener(timerPauseBtn, 'click', togglePauseTimer);
+                safeAddEventListener(timerAddBtn, 'click', addFiveMinutes);
+                safeAddEventListener(timerResetBtn, 'click', resetTimer);
                 
-                timerStartBtnMobile.addEventListener('click', () => {
+                safeAddEventListener(timerStartBtnMobile, 'click', () => {
                     startTimer();
                     toggleMobileMenu();
                 });
-                timerPauseBtnMobile.addEventListener('click', () => {
+                safeAddEventListener(timerPauseBtnMobile, 'click', () => {
                     togglePauseTimer();
                     toggleMobileMenu();
                 });
-                timerAddBtnMobile.addEventListener('click', () => {
+                safeAddEventListener(timerAddBtnMobile, 'click', () => {
                     addFiveMinutes();
                     toggleMobileMenu();
                 });
-                timerResetBtnMobile.addEventListener('click', () => {
+                safeAddEventListener(timerResetBtnMobile, 'click', () => {
                     resetTimer();
                     toggleMobileMenu();
                 });
                 
-                todoAddBtn.addEventListener('click', addTodo);
-                todoClearBtn.addEventListener('click', clearCompletedTodos);
+                safeAddEventListener(todoAddBtn, 'click', addTodo);
+                safeAddEventListener(todoClearBtn, 'click', clearCompletedTodos);
                 
-                todoAddBtnMobile.addEventListener('click', () => {
+                safeAddEventListener(todoAddBtnMobile, 'click', () => {
                     addTodo();
                     toggleMobileMenu();
                 });
-                todoClearBtnMobile.addEventListener('click', () => {
+                safeAddEventListener(todoClearBtnMobile, 'click', () => {
                     clearCompletedTodos();
                     toggleMobileMenu();
                 });
@@ -2271,8 +2352,8 @@
                     });
                 });
                 
-                mobileMenuButton.addEventListener('click', toggleMobileMenu);
-                fullscreenToggle.addEventListener('click', toggleFullscreen);
+                safeAddEventListener(mobileMenuButton, 'click', toggleMobileMenu);
+                safeAddEventListener(fullscreenToggle, 'click', toggleFullscreen);
                 
                 document.addEventListener('click', (e) => {
                     if (isMobileMenuOpen && 
@@ -2547,6 +2628,280 @@
                 
                 document.querySelectorAll('.celebration, .confetti').forEach(el => el.remove());
             }
+
+            async function hashPassword(password) {
+                if (window.crypto && window.crypto.subtle) {
+                    const data = new TextEncoder().encode(password);
+                    const digest = await crypto.subtle.digest('SHA-256', data);
+                    return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+                }
+
+                let hash = 0;
+                for (let i = 0; i < password.length; i++) {
+                    hash = ((hash << 5) - hash) + password.charCodeAt(i);
+                    hash |= 0;
+                }
+                return `fallback_${Math.abs(hash)}`;
+            }
+
+            async function getUsersStore() {
+                try {
+                    return JSON.parse(localStorage.getItem('fd_users') || '{}');
+                } catch (e) {
+                    return {};
+                }
+            }
+
+            async function setUsersStore(users) {
+                localStorage.setItem('fd_users', JSON.stringify(users));
+            }
+
+            function setupAuthSystem() {
+                updateAuthStatus();
+                syncProfileInputs();
+                setInterval(() => persistCurrentUserData(), 8000);
+            }
+
+            function updateAuthStatus(message) {
+                const authStatus = document.getElementById('auth-status');
+                if (!authStatus) return;
+
+                if (message) {
+                    authStatus.textContent = message;
+                    return;
+                }
+
+                authStatus.textContent = currentUser ? `Logged in as: ${currentUser}` : 'Not logged in';
+            }
+
+            async function handleSignup() {
+                if (isAuthBusy) return;
+                isAuthBusy = true;
+                const usernameInput = document.getElementById('auth-username').value.trim();
+                const password = document.getElementById('auth-password').value;
+                const email = document.getElementById('profile-email').value.trim();
+                const username = usernameInput.toLowerCase();
+                updateAuthStatus('Creating account...');
+                try {
+                    if (!username || !password) {
+                        updateAuthStatus('Please enter username and password');
+                        return;
+                    }
+
+                    if (password.length < 8) {
+                        updateAuthStatus('Password must be at least 8 characters');
+                        return;
+                    }
+
+                    const profile = {
+                        name: usernameInput,
+                        email: email || `${username}@focusdomain8.local`,
+                        avatarUrl: document.getElementById('profile-avatar-url').value
+                    };
+                    localStorage.setItem('userProfile', JSON.stringify(profile));
+
+                    const passwordHash = await hashPassword(password);
+                    if (firebaseReady && auth && db) {
+                        try {
+                            const authEmail = email || `${username}@focusdomain8.local`;
+                            const credential = await auth.createUserWithEmailAndPassword(authEmail, password);
+                            const uid = credential.user.uid;
+                            await db.collection('focus_users').doc(uid).set({
+                                username,
+                                email: authEmail,
+                                passwordHash,
+                                data: getAllData(),
+                                createdAt: Date.now(),
+                                updatedAt: Date.now()
+                            });
+
+                            currentUser = username;
+                            currentUserUid = uid;
+                            localStorage.setItem('fd_current_user', username);
+                            localStorage.setItem('fd_current_user_uid', uid);
+                            updateAuthStatus('Sign up successful. You are now logged in.');
+                            return;
+                        } catch (e) {
+                            updateAuthStatus(e.message.includes('email-already-in-use') ? 'Username/email already in use. Try logging in.' : `Signup failed: ${e.message}`);
+                            return;
+                        }
+                    }
+
+                    const users = await getUsersStore();
+                    if (users[username]) {
+                        updateAuthStatus('Username already taken. Please choose another.');
+                        return;
+                    }
+                    users[username] = { passwordHash, data: getAllData(), createdAt: Date.now(), updatedAt: Date.now() };
+                    await setUsersStore(users);
+                    currentUser = username;
+                    localStorage.setItem('fd_current_user', username);
+                    updateAuthStatus('Signed up in local mode (same-device only).');
+                } catch (e) {
+                    updateAuthStatus(`Signup error: ${e.message || 'unknown error'}`);
+                } finally {
+                    isAuthBusy = false;
+                }
+            }
+
+            async function handleLogin() {
+                if (isAuthBusy) return;
+                isAuthBusy = true;
+                const username = document.getElementById('auth-username').value.trim().toLowerCase();
+                const password = document.getElementById('auth-password').value;
+                const email = document.getElementById('profile-email').value.trim();
+                updateAuthStatus('Signing in...');
+                try {
+                    if (!username || !password) {
+                        updateAuthStatus('Please enter username and password');
+                        return;
+                    }
+                    const passwordHash = await hashPassword(password);
+                    if (firebaseReady && auth && db) {
+                        try {
+                            const authEmail = email || `${username}@focusdomain8.local`;
+                            const credential = await auth.signInWithEmailAndPassword(authEmail, password);
+                            const uid = credential.user.uid;
+                            const userDoc = await db.collection('focus_users').doc(uid).get();
+                            if (!userDoc.exists) {
+                                updateAuthStatus('Account data not found.');
+                                return;
+                            }
+                            const userData = userDoc.data();
+                            currentUser = userData.username || username || authEmail;
+                            currentUserUid = uid;
+                            localStorage.setItem('fd_current_user', currentUser);
+                            localStorage.setItem('fd_current_user_uid', uid);
+                            applyAccountData(userData.data);
+                            updateAuthStatus(`Welcome back, ${currentUser}`);
+                            return;
+                        } catch (e) {
+                            updateAuthStatus(`Login failed: ${e.message}`);
+                            return;
+                        }
+                    }
+
+                    const users = await getUsersStore();
+                    const user = users[username];
+
+                    if (!user || user.passwordHash !== passwordHash) {
+                        updateAuthStatus('Invalid username or password');
+                        return;
+                    }
+
+                    currentUser = username;
+                    localStorage.setItem('fd_current_user', username);
+                    applyAccountData(user.data);
+                    updateAuthStatus(`Welcome back, ${username}`);
+                } catch (e) {
+                    updateAuthStatus(`Login error: ${e.message || 'unknown error'}`);
+                } finally {
+                    isAuthBusy = false;
+                }
+            }
+
+            async function handleLogout() {
+                await persistCurrentUserData();
+                if (firebaseReady && auth && auth.currentUser) {
+                    await auth.signOut();
+                }
+                currentUser = null;
+                currentUserUid = null;
+                localStorage.removeItem('fd_current_user');
+                localStorage.removeItem('fd_current_user_uid');
+                updateAuthStatus('Logged out successfully');
+            }
+
+            async function restoreCurrentUserData() {
+                if (!currentUser) {
+                    updateAuthStatus();
+                    return;
+                }
+
+                if (firebaseReady && auth) {
+                    const sessionUser = auth.currentUser;
+                    if (sessionUser) {
+                        currentUserUid = sessionUser.uid;
+                        localStorage.setItem('fd_current_user_uid', sessionUser.uid);
+                        const userDoc = await db.collection('focus_users').doc(sessionUser.uid).get();
+                        if (userDoc.exists) {
+                            const data = userDoc.data();
+                            currentUser = data.username || currentUser;
+                            localStorage.setItem('fd_current_user', currentUser);
+                            applyAccountData(data.data);
+                            updateAuthStatus();
+                            return;
+                        }
+                    }
+                }
+
+                const users = await getUsersStore();
+                if (!users[currentUser]) {
+                    currentUser = null;
+                    localStorage.removeItem('fd_current_user');
+                    updateAuthStatus();
+                    return;
+                }
+
+                applyAccountData(users[currentUser].data);
+                updateAuthStatus();
+            }
+
+            async function persistCurrentUserData() {
+                if (!currentUser) return;
+
+                if (firebaseReady && db && currentUserUid) {
+                    await db.collection('focus_users').doc(currentUserUid).set({
+                        username: currentUser,
+                        data: getAllData(),
+                        updatedAt: Date.now()
+                    }, { merge: true });
+                    return;
+                }
+
+                const users = await getUsersStore();
+                if (!users[currentUser]) return;
+
+                users[currentUser].data = getAllData();
+                users[currentUser].updatedAt = Date.now();
+                await setUsersStore(users);
+            }
+
+            function applyAccountData(data) {
+                if (!data || typeof data !== 'object') return;
+
+                if (data.profile) localStorage.setItem('userProfile', data.profile);
+                if (data.todos) localStorage.setItem('todos', data.todos);
+                if (data.notes) localStorage.setItem('userNotes', data.notes);
+
+                if (data.timer) {
+                    if (data.timer.endTime) localStorage.setItem('timerEndTime', data.timer.endTime);
+                    if (data.timer.paused) localStorage.setItem('timerPaused', data.timer.paused);
+                    if (data.timer.remaining) localStorage.setItem('timerRemaining', data.timer.remaining);
+                }
+
+                if (data.theme) {
+                    localStorage.setItem('mainColor', data.theme.color || '#00ffff');
+                    localStorage.setItem('glowIntensity', data.theme.glow || '1');
+                    applyTheme(data.theme.color || '#00ffff', data.theme.glow || '1');
+                }
+
+                if (typeof data.currentWallpaper === 'number') {
+                    currentWallpaperIndex = data.currentWallpaper;
+                }
+
+                if (data.currentImageData) {
+                    currentImageData = data.currentImageData;
+                    localStorage.setItem('currentImageData', data.currentImageData);
+                }
+
+                loadProfile();
+                loadTodos();
+                loadImageFromStorage();
+                initializeTimerFromStorage();
+                showWallpaper(currentWallpaperIndex);
+                syncProfileInputs();
+            }
             
             function encryptData(data, key) {
                 try {
@@ -2654,6 +3009,7 @@
                 const saveData = getAllData();
                 
                 localStorage.setItem(`save_${codeWord}`, JSON.stringify(saveData));
+                persistCurrentUserData();
                 document.getElementById('save-status').textContent = 'Progress saved successfully!';
                 document.getElementById('code-word-input').value = '';
             }
@@ -2743,6 +3099,7 @@
                     setTimeout(() => {
                         closeModal(saveLoadModal);
                     }, 1500);
+                    persistCurrentUserData();
                     
                 } catch (e) {
                     document.getElementById('load-status').textContent = 'Error loading progress';
@@ -2897,6 +3254,7 @@
                     setTimeout(() => {
                         closeModal(saveLoadModal);
                     }, 1500);
+                    persistCurrentUserData();
                     
                 } catch (e) {
                     document.getElementById('import-status').textContent = 'Error: ' + e.message;
@@ -2948,50 +3306,45 @@
                 if (newTaskInput) {
                     newTaskInput.style.setProperty('--main-color', color);
                 }
+                persistCurrentUserData();
             }
             
             function setupProfileSystem() {
-                const profileName = document.getElementById('profile-name');
                 const profileEmail = document.getElementById('profile-email');
                 const profileAvatarUrl = document.getElementById('profile-avatar-url');
                 const saveProfileBtn = document.getElementById('save-profile');
-                const profileNameDisplay = document.getElementById('profile-name-display');
-                const profileAvatar = document.getElementById('profile-avatar');
                 const uploadAvatarBtn = document.getElementById('upload-avatar-btn');
                 const avatarFileInput = document.getElementById('avatar-file-input');
                 
                 const savedProfile = localStorage.getItem('userProfile');
                 if (savedProfile) {
                     const profile = JSON.parse(savedProfile);
-                    profileName.value = profile.name || '';
                     profileEmail.value = profile.email || '';
                     profileAvatarUrl.value = profile.avatarUrl || '';
                     
-                    profileNameDisplay.textContent = profile.name || 'User';
                     updateProfileAvatar(profile.avatarUrl, profile.name);
                 }
+                syncProfileInputs();
                 
-                profileName.addEventListener('input', () => {
-                    profileNameDisplay.textContent = profileName.value || 'User';
+                safeAddEventListener(profileAvatarUrl, 'input', () => {
+                    updateProfileAvatar(profileAvatarUrl.value, currentUser || 'User');
                 });
                 
-                profileAvatarUrl.addEventListener('input', () => {
-                    updateProfileAvatar(profileAvatarUrl.value, profileName.value);
+                safeAddEventListener(saveProfileBtn, 'click', saveProfile);
+                
+                safeAddEventListener(uploadAvatarBtn, 'click', () => {
+                    if (avatarFileInput) {
+                        avatarFileInput.click();
+                    }
                 });
                 
-                saveProfileBtn.addEventListener('click', saveProfile);
-                
-                uploadAvatarBtn.addEventListener('click', () => {
-                    avatarFileInput.click();
-                });
-                
-                avatarFileInput.addEventListener('change', function(e) {
+                safeAddEventListener(avatarFileInput, 'change', function(e) {
                     const file = e.target.files[0];
                     if (file && file.type.startsWith('image/')) {
                         const reader = new FileReader();
                         reader.onload = function(e) {
                             profileAvatarUrl.value = e.target.result;
-                            updateProfileAvatar(e.target.result, profileName.value);
+                            updateProfileAvatar(e.target.result, currentUser || 'User');
                         };
                         reader.readAsDataURL(file);
                     }
@@ -3021,13 +3374,14 @@
             
             function saveProfile() {
                 const profile = {
-                    name: document.getElementById('profile-name').value,
+                    name: currentUser || 'User',
                     email: document.getElementById('profile-email').value,
                     avatarUrl: document.getElementById('profile-avatar-url').value
                 };
                 
                 localStorage.setItem('userProfile', JSON.stringify(profile));
                 loadProfile();
+                persistCurrentUserData();
                 closeModal(profileModal);
             }
             
@@ -3037,6 +3391,24 @@
                     const profile = JSON.parse(savedProfile);
                     profileHoverName.textContent = profile.name || 'User';
                     updateProfileAvatar(profile.avatarUrl, profile.name);
+                }
+                syncProfileInputs();
+            }
+
+            function syncProfileInputs() {
+                const savedProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+                const profileEmailInput = document.getElementById('profile-email');
+                const profileAvatarInput = document.getElementById('profile-avatar-url');
+                const usernameInput = document.getElementById('auth-username');
+
+                if (profileEmailInput && !profileEmailInput.value) {
+                    profileEmailInput.value = savedProfile.email || '';
+                }
+                if (profileAvatarInput && !profileAvatarInput.value) {
+                    profileAvatarInput.value = savedProfile.avatarUrl || '';
+                }
+                if (usernameInput && currentUser && !usernameInput.value) {
+                    usernameInput.value = currentUser;
                 }
             }
             
@@ -3051,6 +3423,7 @@
                 
                 saveNotesBtn.addEventListener('click', () => {
                     localStorage.setItem('userNotes', notesText.value);
+                    persistCurrentUserData();
                     closeModal(notesModal);
                 });
             }
@@ -3338,6 +3711,7 @@
                 });
                 
                 localStorage.setItem('todos', JSON.stringify(todos));
+                persistCurrentUserData();
             }
             
             function checkCompletion() {
