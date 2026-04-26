@@ -1908,20 +1908,8 @@
             let titleFlashInterval = null;
             let originalTitle = document.title;
             let currentUser = localStorage.getItem('fd_current_user') || null;
-            let currentUserUid = localStorage.getItem('fd_current_user_uid') || null;
-            let firebaseReady = false;
-            let auth = null;
-            let db = null;
+            let authToken = localStorage.getItem('fd_auth_token') || null;
             let isAuthBusy = false;
-            const firebaseConfig = {
-                apiKey: "AIzaSyAf0kiCwy5eIZ13pbBlHJMKOyz4815AIx0",
-                authDomain: "focusdomain8.firebaseapp.com",
-                projectId: "focusdomain8",
-                storageBucket: "focusdomain8.firebasestorage.app",
-                messagingSenderId: "867834298462",
-                appId: "1:867834298462:web:93688e0fb5e1f3bb7234cf",
-                measurementId: "G-CEBWD36KNL"
-            };
             
             if ('Notification' in window && Notification.permission === 'default') {
                 Notification.requestPermission();
@@ -1930,21 +1918,7 @@
             document.addEventListener('DOMContentLoaded', initializeApp);
             
             function initializeFirebase() {
-                try {
-                    const required = Object.values(firebaseConfig).every(v => v && !String(v).startsWith('REPLACE_WITH_'));
-                    if (!required || typeof firebase === 'undefined') {
-                        return;
-                    }
-
-                    if (!firebase.apps.length) {
-                        firebase.initializeApp(firebaseConfig);
-                    }
-                    auth = firebase.auth();
-                    db = firebase.firestore();
-                    firebaseReady = true;
-                } catch (e) {
-                    firebaseReady = false;
-                }
+                // Firebase removed for reliability. Using local account storage only.
             }
 
             async function initializeApp() {
@@ -2658,31 +2632,28 @@
                 document.querySelectorAll('.celebration, .confetti').forEach(el => el.remove());
             }
 
-            async function hashPassword(password) {
-                if (window.crypto && window.crypto.subtle) {
-                    const data = new TextEncoder().encode(password);
-                    const digest = await crypto.subtle.digest('SHA-256', data);
-                    return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+            async function apiRequest(path, method = 'GET', body = null) {
+                const options = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                };
+
+                if (authToken) {
+                    options.headers['Authorization'] = `Bearer ${authToken}`;
                 }
 
-                let hash = 0;
-                for (let i = 0; i < password.length; i++) {
-                    hash = ((hash << 5) - hash) + password.charCodeAt(i);
-                    hash |= 0;
+                if (body) {
+                    options.body = JSON.stringify(body);
                 }
-                return `fallback_${Math.abs(hash)}`;
-            }
 
-            async function getUsersStore() {
-                try {
-                    return JSON.parse(localStorage.getItem('fd_users') || '{}');
-                } catch (e) {
-                    return {};
+                const response = await fetch(path, options);
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    throw new Error(data.error || `Request failed (${response.status})`);
                 }
-            }
-
-            async function setUsersStore(users) {
-                localStorage.setItem('fd_users', JSON.stringify(users));
+                return data;
             }
 
             function setupAuthSystem() {
@@ -2739,43 +2710,19 @@
                     };
                     localStorage.setItem('userProfile', JSON.stringify(profile));
 
-                    const passwordHash = await hashPassword(password);
-                    if (firebaseReady && auth && db) {
-                        try {
-                            const authEmail = email || `${username}@focusdomain8.local`;
-                            const credential = await auth.createUserWithEmailAndPassword(authEmail, password);
-                            const uid = credential.user.uid;
-                            await db.collection('focus_users').doc(uid).set({
-                                username,
-                                email: authEmail,
-                                passwordHash,
-                                data: getAllData(),
-                                createdAt: Date.now(),
-                                updatedAt: Date.now()
-                            });
+                    const result = await apiRequest('/api/signup', 'POST', {
+                        username,
+                        password,
+                        email: email || null,
+                        profile,
+                        data: getAllData()
+                    });
 
-                            currentUser = username;
-                            currentUserUid = uid;
-                            localStorage.setItem('fd_current_user', username);
-                            localStorage.setItem('fd_current_user_uid', uid);
-                            updateAuthStatus('Sign up successful. You are now logged in.');
-                            return;
-                        } catch (e) {
-                            updateAuthStatus(e.message.includes('email-already-in-use') ? 'Username/email already in use. Try logging in.' : `Signup failed: ${e.message}`);
-                            return;
-                        }
-                    }
-
-                    const users = await getUsersStore();
-                    if (users[username]) {
-                        updateAuthStatus('Username already taken. Please choose another.');
-                        return;
-                    }
-                    users[username] = { passwordHash, data: getAllData(), createdAt: Date.now(), updatedAt: Date.now() };
-                    await setUsersStore(users);
                     currentUser = username;
+                    authToken = result.token;
                     localStorage.setItem('fd_current_user', username);
-                    updateAuthStatus('Signed up in local mode (same-device only).');
+                    localStorage.setItem('fd_auth_token', authToken);
+                    updateAuthStatus('Sign up successful. You are now logged in.');
                 } catch (e) {
                     updateAuthStatus(`Signup error: ${e.message || 'unknown error'}`);
                 } finally {
@@ -2788,49 +2735,18 @@
                 isAuthBusy = true;
                 const username = document.getElementById('auth-username').value.trim().toLowerCase();
                 const password = document.getElementById('auth-password').value;
-                const email = document.getElementById('profile-email').value.trim();
                 updateAuthStatus('Signing in...');
                 try {
                     if (!username || !password) {
                         updateAuthStatus('Please enter username and password');
                         return;
                     }
-                    const passwordHash = await hashPassword(password);
-                    if (firebaseReady && auth && db) {
-                        try {
-                            const authEmail = email || `${username}@focusdomain8.local`;
-                            const credential = await auth.signInWithEmailAndPassword(authEmail, password);
-                            const uid = credential.user.uid;
-                            const userDoc = await db.collection('focus_users').doc(uid).get();
-                            if (!userDoc.exists) {
-                                updateAuthStatus('Account data not found.');
-                                return;
-                            }
-                            const userData = userDoc.data();
-                            currentUser = userData.username || username || authEmail;
-                            currentUserUid = uid;
-                            localStorage.setItem('fd_current_user', currentUser);
-                            localStorage.setItem('fd_current_user_uid', uid);
-                            applyAccountData(userData.data);
-                            updateAuthStatus(`Welcome back, ${currentUser}`);
-                            return;
-                        } catch (e) {
-                            updateAuthStatus(`Login failed: ${e.message}`);
-                            return;
-                        }
-                    }
-
-                    const users = await getUsersStore();
-                    const user = users[username];
-
-                    if (!user || user.passwordHash !== passwordHash) {
-                        updateAuthStatus('Invalid username or password');
-                        return;
-                    }
-
-                    currentUser = username;
-                    localStorage.setItem('fd_current_user', username);
-                    applyAccountData(user.data);
+                    const result = await apiRequest('/api/login', 'POST', { username, password });
+                    currentUser = result.username || username;
+                    authToken = result.token;
+                    localStorage.setItem('fd_current_user', currentUser);
+                    localStorage.setItem('fd_auth_token', authToken);
+                    applyAccountData(result.data || {});
                     updateAuthStatus(`Welcome back, ${username}`);
                 } catch (e) {
                     updateAuthStatus(`Login error: ${e.message || 'unknown error'}`);
@@ -2841,69 +2757,45 @@
 
             async function handleLogout() {
                 await persistCurrentUserData();
-                if (firebaseReady && auth && auth.currentUser) {
-                    await auth.signOut();
+                if (authToken) {
+                    try {
+                        await apiRequest('/api/logout', 'POST');
+                    } catch (e) {}
                 }
                 currentUser = null;
-                currentUserUid = null;
+                authToken = null;
                 localStorage.removeItem('fd_current_user');
-                localStorage.removeItem('fd_current_user_uid');
+                localStorage.removeItem('fd_auth_token');
                 updateAuthStatus('Logged out successfully');
             }
 
             async function restoreCurrentUserData() {
-                if (!currentUser) {
+                if (!currentUser || !authToken) {
                     updateAuthStatus();
                     return;
                 }
-
-                if (firebaseReady && auth) {
-                    const sessionUser = auth.currentUser;
-                    if (sessionUser) {
-                        currentUserUid = sessionUser.uid;
-                        localStorage.setItem('fd_current_user_uid', sessionUser.uid);
-                        const userDoc = await db.collection('focus_users').doc(sessionUser.uid).get();
-                        if (userDoc.exists) {
-                            const data = userDoc.data();
-                            currentUser = data.username || currentUser;
-                            localStorage.setItem('fd_current_user', currentUser);
-                            applyAccountData(data.data);
-                            updateAuthStatus();
-                            return;
-                        }
-                    }
-                }
-
-                const users = await getUsersStore();
-                if (!users[currentUser]) {
+                try {
+                    const result = await apiRequest('/api/me', 'GET');
+                    currentUser = result.username || currentUser;
+                    localStorage.setItem('fd_current_user', currentUser);
+                    applyAccountData(result.data || {});
+                    updateAuthStatus();
+                } catch (e) {
                     currentUser = null;
+                    authToken = null;
                     localStorage.removeItem('fd_current_user');
+                    localStorage.removeItem('fd_auth_token');
                     updateAuthStatus();
-                    return;
                 }
-
-                applyAccountData(users[currentUser].data);
-                updateAuthStatus();
             }
 
             async function persistCurrentUserData() {
-                if (!currentUser) return;
-
-                if (firebaseReady && db && currentUserUid) {
-                    await db.collection('focus_users').doc(currentUserUid).set({
-                        username: currentUser,
-                        data: getAllData(),
-                        updatedAt: Date.now()
-                    }, { merge: true });
-                    return;
-                }
-
-                const users = await getUsersStore();
-                if (!users[currentUser]) return;
-
-                users[currentUser].data = getAllData();
-                users[currentUser].updatedAt = Date.now();
-                await setUsersStore(users);
+                if (!currentUser || !authToken) return;
+                try {
+                    await apiRequest('/api/save', 'POST', {
+                        data: getAllData()
+                    });
+                } catch (e) {}
             }
 
             function applyAccountData(data) {
