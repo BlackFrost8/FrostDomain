@@ -1548,6 +1548,27 @@
         <div id="profile-hover-name">User</div>
     </div>
 
+    <div id="auth-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal">×</button>
+            <h2>Account Login / Sign Up</h2>
+            <div class="profile-control">
+                <label for="auth-username">Username</label>
+                <input type="text" id="auth-username" placeholder="Choose or enter username">
+            </div>
+            <div class="profile-control">
+                <label for="auth-password">Password</label>
+                <input type="password" id="auth-password" placeholder="Password">
+            </div>
+            <div class="auth-row">
+                <button id="signup-button">Sign Up</button>
+                <button id="login-button">Login</button>
+            </div>
+            <button id="logout-button" style="margin-top:10px;">Logout</button>
+            <div id="auth-status">Not logged in</div>
+        </div>
+    </div>
+
     <div class="fullscreen-toggle" id="fullscreen-toggle" title="Toggle Fullscreen">
         <svg viewBox="0 0 24 24">
             <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
@@ -1818,6 +1839,7 @@
             const saveLoadBtn = document.getElementById('save-load-btn');
             const themeBtn = document.getElementById('theme-btn');
             const profileBtn = document.getElementById('profile-btn');
+            const authBtn = document.getElementById('auth-btn');
             const notesBtn = document.getElementById('notes-btn');
             const infoBtn = document.getElementById('info-btn');
             const timerStartBtn = document.getElementById('timer-start-btn');
@@ -1833,6 +1855,7 @@
             const saveLoadBtnMobile = document.getElementById('save-load-btn-mobile');
             const themeBtnMobile = document.getElementById('theme-btn-mobile');
             const profileBtnMobile = document.getElementById('profile-btn-mobile');
+            const authBtnMobile = document.getElementById('auth-btn-mobile');
             const notesBtnMobile = document.getElementById('notes-btn-mobile');
             const infoBtnMobile = document.getElementById('info-btn-mobile');
             const timerStartBtnMobile = document.getElementById('timer-start-btn-mobile');
@@ -1846,6 +1869,7 @@
             const saveLoadModal = document.getElementById('save-load-modal');
             const themeModal = document.getElementById('theme-modal');
             const profileModal = document.getElementById('profile-modal');
+            const authModal = document.getElementById('auth-modal');
             const notesModal = document.getElementById('notes-modal');
             const infoModal = document.getElementById('info-modal');
             
