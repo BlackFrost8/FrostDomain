@@ -340,7 +340,7 @@
             outline: none;
         }
 
-        #save-button, #load-button, #email-export {
+        #save-button, #load-button, #email-export, #signup-button, #login-button, #logout-button {
             width: 100%;
             padding: 10px;
             background-color: black;
@@ -352,7 +352,7 @@
             margin-bottom: 10px;
         }
 
-        #save-button:hover, #load-button:hover, #email-export:hover {
+        #save-button:hover, #load-button:hover, #email-export:hover, #signup-button:hover, #login-button:hover, #logout-button:hover {
             background-color: var(--main-color);
             color: black;
         }
@@ -500,6 +500,22 @@
             color: var(--main-color);
             border: 1px solid var(--main-color);
             border-radius: 4px;
+        }
+
+        #auth-status {
+            margin: 8px 0;
+            font-size: 0.85rem;
+            text-align: center;
+            color: var(--main-color);
+        }
+
+        .auth-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .auth-row button {
+            flex: 1;
         }
 
         #profile-preview {
@@ -1416,7 +1432,7 @@
                 <i>🎨</i> Theme Customizer
             </button>
             <button class="control-button" id="profile-btn">
-                <i>👤</i> Profile Settings
+                <i>👤</i> Profile & Account
             </button>
             <button class="control-button" id="notes-btn">
                 <i>📝</i> Notes
@@ -1481,7 +1497,7 @@
                 <i>🎨</i> Theme Customizer
             </button>
             <button class="mobile-control-button" id="profile-btn-mobile">
-                <i>👤</i> Profile Settings
+                <i>👤</i> Profile & Account
             </button>
             <button class="mobile-control-button" id="notes-btn-mobile">
                 <i>📝</i> Notes
@@ -1617,6 +1633,25 @@
                 <label>Email:</label>
                 <input type="email" id="profile-email" placeholder="Enter your email">
             </div>
+
+            <h3 style="margin-top: 10px; border-bottom: 1px solid var(--main-color); padding-bottom: 5px;">Account Login</h3>
+            <div class="profile-control">
+                <label>Username:</label>
+                <input type="text" id="auth-username" placeholder="Create your username">
+            </div>
+            <div class="profile-control">
+                <label>Password (8+ characters):</label>
+                <input type="password" id="auth-password" placeholder="Create your password">
+            </div>
+            <div class="auth-row">
+                <button id="signup-button">Sign Up</button>
+                <button id="login-button">Login</button>
+            </div>
+            <button id="logout-button" style="margin-top:10px;">Logout</button>
+            <div id="auth-status">Not logged in</div>
+            <p style="font-size: 0.8rem; opacity: 0.85; margin-top: 8px;">
+                Account sync is currently saved in your browser storage. To move data across devices, use Save & Load → Export/Import.
+            </p>
             
             <div class="profile-control">
                 <label>Profile Picture:</label>
@@ -1848,6 +1883,7 @@
             let hasShownTimerNotification = false;
             let titleFlashInterval = null;
             let originalTitle = document.title;
+            let currentUser = localStorage.getItem('fd_current_user') || null;
             
             if ('Notification' in window && Notification.permission === 'default') {
                 Notification.requestPermission();
@@ -1885,6 +1921,8 @@
                 }
                 
                 setupEventListeners();
+                setupAuthSystem();
+                restoreCurrentUserData();
                 showWallpaper(currentWallpaperIndex);
                 
                 setTimeout(() => {
@@ -1998,6 +2036,7 @@
             
             function saveCurrentState() {
                 localStorage.setItem('currentWallpaperIndex', currentWallpaperIndex.toString());
+                persistCurrentUserData();
             }
             
             function initializeTimerFromStorage() {
@@ -2547,6 +2586,174 @@
                 
                 document.querySelectorAll('.celebration, .confetti').forEach(el => el.remove());
             }
+
+            function getUsersStore() {
+                try {
+                    return JSON.parse(localStorage.getItem('fd_users') || '{}');
+                } catch (e) {
+                    return {};
+                }
+            }
+
+            function setUsersStore(users) {
+                localStorage.setItem('fd_users', JSON.stringify(users));
+            }
+
+            function setupAuthSystem() {
+                const signupButton = document.getElementById('signup-button');
+                const loginButton = document.getElementById('login-button');
+                const logoutButton = document.getElementById('logout-button');
+
+                signupButton.addEventListener('click', handleSignup);
+                loginButton.addEventListener('click', handleLogin);
+                logoutButton.addEventListener('click', handleLogout);
+
+                updateAuthStatus();
+                syncProfileInputs();
+                setInterval(persistCurrentUserData, 5000);
+            }
+
+            function updateAuthStatus(message) {
+                const authStatus = document.getElementById('auth-status');
+                if (!authStatus) return;
+
+                if (message) {
+                    authStatus.textContent = message;
+                    return;
+                }
+
+                authStatus.textContent = currentUser ? `Logged in as: ${currentUser}` : 'Not logged in';
+            }
+
+            function handleSignup() {
+                const usernameInput = document.getElementById('auth-username').value.trim();
+                const password = document.getElementById('auth-password').value;
+                const username = usernameInput.toLowerCase();
+
+                if (!username || !password) {
+                    updateAuthStatus('Please enter username and password');
+                    return;
+                }
+
+                if (password.length < 8) {
+                    updateAuthStatus('Password must be at least 8 characters');
+                    return;
+                }
+
+                const users = getUsersStore();
+                if (users[username]) {
+                    updateAuthStatus('Username already taken. Please choose another.');
+                    return;
+                }
+
+                const profile = {
+                    name: document.getElementById('profile-name').value || usernameInput,
+                    email: document.getElementById('profile-email').value,
+                    avatarUrl: document.getElementById('profile-avatar-url').value
+                };
+                localStorage.setItem('userProfile', JSON.stringify(profile));
+
+                users[username] = {
+                    password,
+                    data: getAllData(),
+                    createdAt: Date.now(),
+                    updatedAt: Date.now()
+                };
+
+                setUsersStore(users);
+                currentUser = username;
+                localStorage.setItem('fd_current_user', username);
+                updateAuthStatus('Sign up successful. You are now logged in.');
+            }
+
+            function handleLogin() {
+                const username = document.getElementById('auth-username').value.trim().toLowerCase();
+                const password = document.getElementById('auth-password').value;
+                const users = getUsersStore();
+                const user = users[username];
+
+                if (!user || user.password !== password) {
+                    updateAuthStatus('Invalid username or password');
+                    return;
+                }
+
+                currentUser = username;
+                localStorage.setItem('fd_current_user', username);
+                applyAccountData(user.data);
+                updateAuthStatus(`Welcome back, ${username}`);
+            }
+
+            function handleLogout() {
+                persistCurrentUserData();
+                currentUser = null;
+                localStorage.removeItem('fd_current_user');
+                updateAuthStatus('Logged out successfully');
+            }
+
+            function restoreCurrentUserData() {
+                if (!currentUser) {
+                    updateAuthStatus();
+                    return;
+                }
+
+                const users = getUsersStore();
+                if (!users[currentUser]) {
+                    currentUser = null;
+                    localStorage.removeItem('fd_current_user');
+                    updateAuthStatus();
+                    return;
+                }
+
+                applyAccountData(users[currentUser].data);
+                updateAuthStatus();
+            }
+
+            function persistCurrentUserData() {
+                if (!currentUser) return;
+
+                const users = getUsersStore();
+                if (!users[currentUser]) return;
+
+                users[currentUser].data = getAllData();
+                users[currentUser].updatedAt = Date.now();
+                setUsersStore(users);
+            }
+
+            function applyAccountData(data) {
+                if (!data || typeof data !== 'object') return;
+
+                if (data.profile) localStorage.setItem('userProfile', data.profile);
+                if (data.todos) localStorage.setItem('todos', data.todos);
+                if (data.notes) localStorage.setItem('userNotes', data.notes);
+
+                if (data.timer) {
+                    if (data.timer.endTime) localStorage.setItem('timerEndTime', data.timer.endTime);
+                    if (data.timer.paused) localStorage.setItem('timerPaused', data.timer.paused);
+                    if (data.timer.remaining) localStorage.setItem('timerRemaining', data.timer.remaining);
+                }
+
+                if (data.theme) {
+                    localStorage.setItem('mainColor', data.theme.color || '#00ffff');
+                    localStorage.setItem('glowIntensity', data.theme.glow || '1');
+                    applyTheme(data.theme.color || '#00ffff', data.theme.glow || '1');
+                }
+
+                if (typeof data.currentWallpaper === 'number') {
+                    currentWallpaperIndex = data.currentWallpaper;
+                }
+
+                if (data.currentImageData) {
+                    currentImageData = data.currentImageData;
+                    localStorage.setItem('currentImageData', data.currentImageData);
+                }
+
+                loadProfile();
+                loadTodos();
+                loadImageFromStorage();
+                initializeTimerFromStorage();
+                showWallpaper(currentWallpaperIndex);
+                syncProfileInputs();
+            }
             
             function encryptData(data, key) {
                 try {
@@ -2654,6 +2861,7 @@
                 const saveData = getAllData();
                 
                 localStorage.setItem(`save_${codeWord}`, JSON.stringify(saveData));
+                persistCurrentUserData();
                 document.getElementById('save-status').textContent = 'Progress saved successfully!';
                 document.getElementById('code-word-input').value = '';
             }
@@ -2743,6 +2951,7 @@
                     setTimeout(() => {
                         closeModal(saveLoadModal);
                     }, 1500);
+                    persistCurrentUserData();
                     
                 } catch (e) {
                     document.getElementById('load-status').textContent = 'Error loading progress';
@@ -2897,6 +3106,7 @@
                     setTimeout(() => {
                         closeModal(saveLoadModal);
                     }, 1500);
+                    persistCurrentUserData();
                     
                 } catch (e) {
                     document.getElementById('import-status').textContent = 'Error: ' + e.message;
@@ -2948,6 +3158,7 @@
                 if (newTaskInput) {
                     newTaskInput.style.setProperty('--main-color', color);
                 }
+                persistCurrentUserData();
             }
             
             function setupProfileSystem() {
@@ -2970,6 +3181,7 @@
                     profileNameDisplay.textContent = profile.name || 'User';
                     updateProfileAvatar(profile.avatarUrl, profile.name);
                 }
+                syncProfileInputs();
                 
                 profileName.addEventListener('input', () => {
                     profileNameDisplay.textContent = profileName.value || 'User';
@@ -3028,6 +3240,7 @@
                 
                 localStorage.setItem('userProfile', JSON.stringify(profile));
                 loadProfile();
+                persistCurrentUserData();
                 closeModal(profileModal);
             }
             
@@ -3037,6 +3250,28 @@
                     const profile = JSON.parse(savedProfile);
                     profileHoverName.textContent = profile.name || 'User';
                     updateProfileAvatar(profile.avatarUrl, profile.name);
+                }
+                syncProfileInputs();
+            }
+
+            function syncProfileInputs() {
+                const savedProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+                const profileNameInput = document.getElementById('profile-name');
+                const profileEmailInput = document.getElementById('profile-email');
+                const profileAvatarInput = document.getElementById('profile-avatar-url');
+                const usernameInput = document.getElementById('auth-username');
+
+                if (profileNameInput && !profileNameInput.value) {
+                    profileNameInput.value = savedProfile.name || '';
+                }
+                if (profileEmailInput && !profileEmailInput.value) {
+                    profileEmailInput.value = savedProfile.email || '';
+                }
+                if (profileAvatarInput && !profileAvatarInput.value) {
+                    profileAvatarInput.value = savedProfile.avatarUrl || '';
+                }
+                if (usernameInput && currentUser && !usernameInput.value) {
+                    usernameInput.value = currentUser;
                 }
             }
             
@@ -3051,6 +3286,7 @@
                 
                 saveNotesBtn.addEventListener('click', () => {
                     localStorage.setItem('userNotes', notesText.value);
+                    persistCurrentUserData();
                     closeModal(notesModal);
                 });
             }
@@ -3338,6 +3574,7 @@
                 });
                 
                 localStorage.setItem('todos', JSON.stringify(todos));
+                persistCurrentUserData();
             }
             
             function checkCompletion() {
