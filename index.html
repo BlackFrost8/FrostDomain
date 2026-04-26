@@ -1977,8 +1977,13 @@
                     mobileArrows.forEach(arrow => arrow.style.display = 'none');
                 }
                 
-                setupEventListeners();
                 setupAuthSystem();
+                try {
+                    setupEventListeners();
+                } catch (e) {
+                    console.error('Event setup error:', e);
+                    updateAuthStatus('Interface setup warning. Auth is still available.');
+                }
                 window.__focusDomainCloseProfile = () => closeModal(profileModal);
                 window.__focusDomainSignup = () => handleSignup();
                 window.__focusDomainLogin = () => handleLogin();
