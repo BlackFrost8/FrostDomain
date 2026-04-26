@@ -1630,8 +1630,8 @@
             </div>
 
             <div class="profile-control">
-                <label>Email:</label>
-                <input type="email" id="profile-email" placeholder="Enter your email">
+                <label>Email (optional):</label>
+                <input type="email" id="profile-email" placeholder="Enter your email (or leave blank)">
             </div>
 
             <h3 style="margin-top: 10px; border-bottom: 1px solid var(--main-color); padding-bottom: 5px;">Account Login</h3>
@@ -2682,8 +2682,8 @@
                 const username = usernameInput.toLowerCase();
                 updateAuthStatus('Creating account...');
                 try {
-                    if (!username || !password || !email) {
-                        updateAuthStatus('Please enter username, email, and password');
+                    if (!username || !password) {
+                        updateAuthStatus('Please enter username and password');
                         return;
                     }
 
@@ -2694,7 +2694,7 @@
 
                     const profile = {
                         name: usernameInput,
-                        email,
+                        email: email || `${username}@focusdomain8.local`,
                         avatarUrl: document.getElementById('profile-avatar-url').value
                     };
                     localStorage.setItem('userProfile', JSON.stringify(profile));
@@ -2702,18 +2702,12 @@
                     const passwordHash = await hashPassword(password);
                     if (firebaseReady && auth && db) {
                         try {
-                            const usernameDoc = await db.collection('focus_usernames').doc(username).get();
-                            if (usernameDoc.exists) {
-                                updateAuthStatus('Username already taken. Please choose another.');
-                                return;
-                            }
-
-                            const credential = await auth.createUserWithEmailAndPassword(email, password);
+                            const authEmail = email || `${username}@focusdomain8.local`;
+                            const credential = await auth.createUserWithEmailAndPassword(authEmail, password);
                             const uid = credential.user.uid;
-                            await db.collection('focus_usernames').doc(username).set({ uid, email, createdAt: Date.now() });
                             await db.collection('focus_users').doc(uid).set({
                                 username,
-                                email,
+                                email: authEmail,
                                 passwordHash,
                                 data: getAllData(),
                                 createdAt: Date.now(),
@@ -2727,7 +2721,7 @@
                             updateAuthStatus('Sign up successful. You are now logged in.');
                             return;
                         } catch (e) {
-                            updateAuthStatus(e.message.includes('email-already-in-use') ? 'Email already in use.' : `Signup failed: ${e.message}`);
+                            updateAuthStatus(e.message.includes('email-already-in-use') ? 'Username/email already in use. Try logging in.' : `Signup failed: ${e.message}`);
                             return;
                         }
                     }
@@ -2757,14 +2751,15 @@
                 const email = document.getElementById('profile-email').value.trim();
                 updateAuthStatus('Signing in...');
                 try {
+                    if (!username || !password) {
+                        updateAuthStatus('Please enter username and password');
+                        return;
+                    }
                     const passwordHash = await hashPassword(password);
                     if (firebaseReady && auth && db) {
                         try {
-                            if (!email) {
-                                updateAuthStatus('Enter your email to login.');
-                                return;
-                            }
-                            const credential = await auth.signInWithEmailAndPassword(email, password);
+                            const authEmail = email || `${username}@focusdomain8.local`;
+                            const credential = await auth.signInWithEmailAndPassword(authEmail, password);
                             const uid = credential.user.uid;
                             const userDoc = await db.collection('focus_users').doc(uid).get();
                             if (!userDoc.exists) {
@@ -2772,11 +2767,7 @@
                                 return;
                             }
                             const userData = userDoc.data();
-                            if (username && userData.username !== username) {
-                                updateAuthStatus('Username does not match this email.');
-                                return;
-                            }
-                            currentUser = userData.username || username || email;
+                            currentUser = userData.username || username || authEmail;
                             currentUserUid = uid;
                             localStorage.setItem('fd_current_user', currentUser);
                             localStorage.setItem('fd_current_user_uid', uid);
